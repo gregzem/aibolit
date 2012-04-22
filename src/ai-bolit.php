@@ -76,7 +76,7 @@ function stdOut($text, $add_lb = true)
 		$text = print_r($text, true);
 	}
 
-	@fwrite(stdOut, $text . ($add_lb ? "\n" : ''));
+	@fwrite(STDOUT, $text . ($add_lb ? "\n" : ''));
 }
 
 /**
