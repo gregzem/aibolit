@@ -126,7 +126,7 @@ function seconds2Human($seconds)
 		$seconds = $seconds % 60;
 	}
 
-	$r .= $seconds + ($ms > 0 ? round($ms, 5) : 0) . ' сек';
+	$r .= $seconds + ($ms > 0 ? round($ms, 5) : 0) . (isCli() ? ' s' : ' сек'); //' сек' - not good for shell
 
 	return $r;
 }
