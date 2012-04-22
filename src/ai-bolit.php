@@ -263,9 +263,10 @@ chdir(ROOT_PATH);
 if (isCli() AND REPORT !== '' AND !getEmails(REPORT))
 {
 	$report = str_replace('\\', '/', REPORT);
+	$abs = strpos($report, '/') === 0 ? DIRECTORY_SEPARATOR : '';
 	$report = array_values(array_filter(explode('/', $report)));
 	$report_file = array_pop($report);
-	$report_path = realpath(implode(DIRECTORY_SEPARATOR, $report));
+	$report_path = realpath($abs . implode(DIRECTORY_SEPARATOR, $report));
 
 	define('REPORT_FILE', $report_file);
 	define('REPORT_PATH', $report_path);
@@ -470,7 +471,7 @@ define('QCR_SVALUE_FOLDER', '0');
  */
 function getEmails($email)
 {
-	$email = preg_split('#[,\s;]#', $email, PREG_SPLIT_NO_EMPTY);
+	$email = preg_split('#[,\s;]#', $email, -1, PREG_SPLIT_NO_EMPTY);
 	$r = array();
 	for ($i = 0, $size = sizeof($email); $i < $size; $i++)
 	{
