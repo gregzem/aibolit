@@ -113,6 +113,8 @@
   $g_JSVir[] = "if(1){f='f'+'r'+'o'+'m'+'Ch'+'arC'+'ode';}";
   $g_JSVir[] = '.prototype.a}catch(';
   $g_JSVir[] = "if(Ref.indexOf('.google.')!=";
+  $g_JSVir[] = 'eval(function(p,a,c,k,e,r)';
+  $g_JSVir[] = 'indexOf|if|rc|length|msn|yahoo|referrer|altavista|ogo|bi|hp|var|aol|query';
 
   print '$g_JSVirSig = unserialize(base64_decode("' . base64_encode(serialize($g_JSVir)) . '"));<br>';
 
