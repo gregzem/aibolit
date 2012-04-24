@@ -116,13 +116,13 @@ function seconds2Human($seconds)
 	$seconds = $_seconds;
 	if ($hours = floor($seconds / 3600))
 	{
-		$r .= $hours . 'ч ';
+		$r .= $hours . (isCli() ? ' h ' : ' час ');
 		$seconds = $seconds % 3600;
 	}
 
 	if ($minutes = floor($seconds / 60))
 	{
-		$r .= $minutes . 'мин ';
+		$r .= $minutes . (isCli() ? ' m ' : ' мин ');
 		$seconds = $seconds % 60;
 	}
 
