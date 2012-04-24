@@ -37,7 +37,7 @@
   $g_DBShe[] = '(\'"\',\'&quot;\',$fn)).\'";document.list.submit();\\\'>\'.htmlspecialchars(strlen($fn)>format?substr($fn,0,format-3).\'...\':$fn).\'</a>\'.str_repeat(\' \',format-strlen($fn)';
   $g_DBShe[] = 'zehirhacker';
   $g_DBShe[] = 'sypex';
-  $g_DBShe[] = 'J@!Vr@*&RHRw~JLw.G|xlhnLJ~?1.bwObxbP|!V^Cx9ýðýxý"PÝçbx~P';
+  $g_DBShe[] = 'J@!Vr@*&RHRw~JLw.G|xlhnLJ~?1.bwObxbP|!V^Cx9ï¿½ï¿½ï¿½xï¿½"Pï¿½ï¿½bx~P';
   $g_DBShe[] = 'cihshell';
   $g_DBShe[] = 'X1NFU1NJT05bJ3R4dGF1dGhpbiddID0gdHJ1ZTsNCiAgICBpZiAoJF9QT1NUWydybSddKSB7DQogICAgICBzZXRjb29raWUoJ3R4dGF1dGhfJy4kcm1ncm91cCwgbW';
   $g_DBShe[] = 'JHZpc2l0Y291bnQgPSAkSFRUUF9DT09LSUVfVkFSU1sidmlzaXRzIl07IGlmK';
@@ -76,6 +76,7 @@
   $g_DBShe[] = '$filepath=@realpath($_POST[\'filepath\']);';
   $g_DBShe[] = 'antishell';
   $g_DBShe[] = "rootshell";
+  $g_DBShe[] = 'myshellexec';
 
   print '$g_DBShe = unserialize(base64_decode("' . base64_encode(serialize($g_DBShe)) . '"));<br>';
 
