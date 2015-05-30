@@ -1,0 +1,48 @@
+ai-bolit.php
+------------
+
+http://www.revisium.com/aibo/
+audit@revisium.com
+skype: greg_zemskov
+
+Changes in 20130201
+
+- new signatures added
+- report is protected from SE indexing
+- report file name includes randomly generated number against bruteforce protection
+- added wordpress 3.5.1 into .aknown list
+
+
+Changes in 20130122 
+
+- new signatures added
+- added known files for instant cms and invision power board cms
+- hidden files detection
+- bugfix
+
+
+Changes in 201301221
+
+- flexible patterns to find shell and malicious code 
+- extended mechanism for exceptions
+- console report now has a statistics
+- bugfix
+
+
+Changes in 20121106
+
+- new signatures
+- search "sensitive" files which are not in safe
+- bugfix
+
+
+Changes in 20121014
+- added 170 new signatures
+- symlinks are skipped
+- php info added
+- checn for php build version
+- improved external include analysis
+- report file renamed: AI-BOLIT-REPORT-<дата>_<время>.html
+- improved scanning progress
+
+...
