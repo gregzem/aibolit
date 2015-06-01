@@ -827,7 +827,7 @@ if (!isCli() && !isset($_SERVER['HTTP_USER_AGENT'])) {
   exit;
 }
 
-define('AI_VERSION', '20150508');
+define('AI_VERSION', '20150601');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2377,11 +2377,10 @@ function QCR_GoScan($par_Offset)
 				$g_Structure['crc'][$i] = realCRC($l_Content);
 
                                 $l_KnownCRC = $g_Structure['crc'][$i] + realCRC(basename($l_Filename));
-                                if (in_array($l_KnownCRC, $g_KnownList)) {
+                                if ( isset($g_KnownList[$l_KnownCRC]) ) {
 	        		   printProgress(++$_files_and_ignored, $l_Filename);
                                    continue;
                                 }
-
 				$l_UnicodeContent = detect_utf_encoding($l_Content);
 				$l_Unwrapped = $l_Content;
 				if ($l_UnicodeContent !== false) {
@@ -2410,6 +2409,9 @@ function QCR_GoScan($par_Offset)
 				
 				// check vulnerability in files
 				CheckVulnerability($l_Filename, $i, $l_Content);
+
+				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
+
 				
 				// critical
 				$g_SkipNextCheck = false;
@@ -2428,10 +2430,10 @@ function QCR_GoScan($par_Offset)
          					$g_SkipNextCheck = true;
          				}
 				}
-				
+/*				
 				if (!$g_SkipNextCheck) {
 				   // critical without comments
-				   $l_NoComments = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
+				   $l_NoComments = preg_replace('|/\*.*?\*\/|smi', '', $l_Unwrapped);
 				   $g_SkipNextCheckComments = (strlen($l_NoComments) == strlen($l_Unwrapped));
 				} else {
                                    $g_SkipNextCheckComments = true;
@@ -2444,7 +2446,7 @@ function QCR_GoScan($par_Offset)
 					$g_CriticalPHPSig[] = $l_SigId;
                                         $g_SkipNextCheck = true;
 				}			
-
+*/
 				$l_TypeDe = 0;
 			    if ((!$g_SkipNextCheck) && HeuristicChecker($l_Content, $l_TypeDe, $l_Filename)) {
 					$g_HeuristicDetected[] = $i;
@@ -3156,7 +3158,7 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
                if (strpos($l_FileName, $l_KnownFilename) !== false) {
                            $g_KnownListTmp = file($l_AbsolutePathKnownFiles . '/' . $l_FileName);
                             for ($i = 0; $i < count($g_KnownListTmp); $i++) {
-                                $g_KnownListTmp[$i] = trim($g_KnownListTmp[$i]);
+                                $g_KnownListTmp[$i] = (int) trim($g_KnownListTmp[$i]);
                             }
 
                             $g_KnownList = array_merge($g_KnownListTmp, $g_KnownList);
@@ -3165,6 +3167,7 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
         closedir($l_DIRH);
     }
 }
+$g_KnownList = array_flip($g_KnownList);
 
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
@@ -3691,4 +3694,61 @@ stdOut("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 QCR_Debug();
 
-?>
+
+function RemoveCommentsPHP($src) {
+    
+    return preg_replace('
+@
+(?(DEFINE)
+  (?<next_open_tag>
+    [^<]*+
+    (?i: <++[^<?s][^<]* 
+       | <++(?! \?php
+              | \?=
+              | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>
+            ) [^<]*
+    )*+
+    (?i: <++(?: \?php
+              | \?=
+              | [^>]+
+            )       
+       | \z 
+    ) 
+  )
+)
+
+
+\A (?&next_open_tag) \K
+
+|
+
+[^\'"`/#<?]*+
+(?: \'(?:[^\'\\\\]+|\\\\.)*+\' [^\'"`/#<?]*
+  | "(?:[^"\\\\]+|\\\\.)*+"   [^\'"`/#<?]*
+  | `(?:[^`\\\\]+|\\\\.)*+`   [^\'"`/#<?]*  
+  | /(?![/*])                 [^\'"`/#<?]* # stop for // or /*
+
+  | # if close tag ?>
+    \? (?: >(?&next_open_tag)[^\'"`/#<?]* | )
+
+  | <  (?: # heredoc or nowdoc
+           <<[\ \t]*([\'"]?)
+                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+                   \g{-2}[\ \t]*[\r\n]
+             (?-s:.*+[\r\n])*?
+             \g{-1}[\r\n;]
+             [^\'"`/#<?]*
+
+         | (?i: /script\s*>)
+           (?&next_open_tag)
+           [^\'"`/#<?]* 
+
+         | [^\'"`/#<?]*
+       )
+)*+
+\K
+(?: (?://|\#)(?:[^\n?]+|\?(?!>))*+ # single line comment // и #
+  | /\*(?:[^*]+|\*(?!/))*+\*/      # multi line comment /* */
+)?
+@xs', '', $src);
+}
