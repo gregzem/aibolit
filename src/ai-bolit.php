@@ -50,10 +50,11 @@ define('AI_EXTRA_WARN', 0);
 $defaults = array(
 	'path' => dirname(__FILE__),
 	'scan_all_files' => 0, // full scan (rather than just a .js, .php, .html, .htaccess)
-	'scan_delay' => 1, // delay in file scanning to reduce system load
+	'scan_delay' => 0, // delay in file scanning to reduce system load
 	'max_size_to_scan' => '600K',
 	'site_url' => '', // website url
 	'no_rw_dir' => 0,
+        'skip_ext' => '',
 	'report_mask' =>  REPORT_MASK_FULL // full-featured report
 );
 
@@ -813,10 +814,6 @@ $gX_JSVirSig = unserialize(base64_decode("YTozMDp7aTowO3M6NDg6ImRvY3VtZW50XC53cm
 $g_PhishingSig = unserialize(base64_decode("YTo2MDp7aTowO3M6MTM6IkludmFsaWRccytUVk4iO2k6MTtzOjExOiJJbnZhbGlkIFJWTiI7aToyO3M6NDA6ImRlZmF1bHRTdGF0dXNccyo9XHMqWyciXUludGVybmV0IEJhbmtpbmciO2k6MztzOjI4OiI8dGl0bGU+XHMqQ2FwaXRlY1xzK0ludGVybmV0IjtpOjQ7czoyNzoiPHRpdGxlPlxzKkludmVzdGVjXHMrT25saW5lIjtpOjU7czozOToiaW50ZXJuZXRccytQSU5ccytudW1iZXJccytpc1xzK3JlcXVpcmVkIjtpOjY7czoxMToiPHRpdGxlPlNhcnMiO2k6NztzOjEzOiI8YnI+QVRNXHMrUElOIjtpOjg7czoxODoiQ29uZmlybWF0aW9uXHMrT1RQIjtpOjk7czoyNToiPHRpdGxlPlxzKkFic2FccytJbnRlcm5ldCI7aToxMDtzOjIxOiItXHMqUGF5UGFsXHMqPC90aXRsZT4iO2k6MTE7czoxOToiPHRpdGxlPlxzKlBheVxzKlBhbCI7aToxMjtzOjIyOiItXHMqUHJpdmF0aVxzKjwvdGl0bGU+IjtpOjEzO3M6MTk6Ijx0aXRsZT5ccypVbmlDcmVkaXQiO2k6MTQ7czoxOToiQmFua1xzK29mXHMrQW1lcmljYSI7aToxNTtzOjI1OiJBbGliYWJhJm5ic3A7TWFudWZhY3R1cmVyIjtpOjE2O3M6MjA6IlZlcmlmaWVkXHMrYnlccytWaXNhIjtpOjE3O3M6MjE6IkhvbmdccytMZW9uZ1xzK09ubGluZSI7aToxODtzOjMwOiJZb3VyXHMrYWNjb3VudFxzK1x8XHMrTG9nXHMraW4iO2k6MTk7czoyNDoiPHRpdGxlPlxzKk9ubGluZSBCYW5raW5nIjtpOjIwO3M6MjQ6Ijx0aXRsZT5ccypPbmxpbmUtQmFua2luZyI7aToyMTtzOjIyOiJTaWduXHMraW5ccyt0b1xzK1lhaG9vIjtpOjIyO3M6MTY6IllhaG9vXHMqPC90aXRsZT4iO2k6MjM7czoxMToiQkFOQ09MT01CSUEiO2k6MjQ7czoxNjoiPHRpdGxlPlxzKkFtYXpvbiI7aToyNTtzOjE1OiI8dGl0bGU+XHMqQXBwbGUiO2k6MjY7czoxNToiPHRpdGxlPlxzKkdtYWlsIjtpOjI3O3M6Mjg6Ikdvb2dsZVxzK0FjY291bnRzXHMqPC90aXRsZT4iO2k6Mjg7czoyNToiPHRpdGxlPlxzKkdvb2dsZVxzK1NlY3VyZSI7aToyOTtzOjMxOiI8dGl0bGU+XHMqTWVyYWtccytNYWlsXHMrU2VydmVyIjtpOjMwO3M6MjY6Ijx0aXRsZT5ccypTb2NrZXRccytXZWJtYWlsIjtpOjMxO3M6MjE6Ijx0aXRsZT5ccypcW0xfUVVFUllcXSI7aTozMjtzOjM0OiI8dGl0bGU+XHMqQU5aXHMrSW50ZXJuZXRccytCYW5raW5nIjtpOjMzO3M6MzM6ImNvbVwud2Vic3RlcmJhbmtcLnNlcnZsZXRzXC5Mb2dpbiI7aTozNDtzOjE1OiI8dGl0bGU+XHMqR21haWwiO2k6MzU7czoxODoiPHRpdGxlPlxzKkZhY2Vib29rIjtpOjM2O3M6MzY6IlxkKztVUkw9aHR0cHM6Ly93d3dcLndlbGxzZmFyZ29cLmNvbSI7aTozNztzOjIzOiI8dGl0bGU+XHMqV2VsbHNccypGYXJnbyI7aTozODtzOjQ5OiJwcm9wZXJ0eT0ib2c6c2l0ZV9uYW1lIlxzKmNvbnRlbnQ9IkZhY2Vib29rIlxzKi8+IjtpOjM5O3M6MjI6IkFlc1wuQ3RyXC5kZWNyeXB0XHMqXCgiO2k6NDA7czoxNzoiPHRpdGxlPlxzKkFsaWJhYmEiO2k6NDE7czoxOToiUmFib2Jhbmtccyo8L3RpdGxlPiI7aTo0MjtzOjM1OiJcJG1lc3NhZ2VccypcLj1ccypbJyJdezAsMX1QYXNzd29yZCI7aTo0MztzOjQwOiI9XChcZCtcKWh0dHBzOi8vd3d3XC5wYXlwYWxcLmNvbS93ZWJhcHBzIjtpOjQ0O3M6MTg6IlwuaHRtbFw/Y21kPWxvZ2luPSI7aTo0NTtzOjE4OiJXZWJtYWlsXHMqPC90aXRsZT4iO2k6NDY7czoyMzoiPHRpdGxlPlxzKlVQQ1xzK1dlYm1haWwiO2k6NDc7czoxNzoiXC5waHBcP2NtZD1sb2dpbj0iO2k6NDg7czoxNzoiXC5odG1cP2NtZD1sb2dpbj0iO2k6NDk7czoyMzoiXC5zd2VkYmFua1wuc2UvbWRwYXlhY3MiO2k6NTA7czoyNDoiXC5ccypcJF9QT1NUXFtccypbJyJdY3Z2IjtpOjUxO3M6MjA6Ijx0aXRsZT5ccypMQU5ERVNCQU5LIjtpOjUyO3M6MTA6IkJZLVNQMU4wWkEiO2k6NTM7czo0NToiU2VjdXJpdHlccytxdWVzdGlvblxzKzpccytbJyJdXHMqXC5ccypcJF9QT1NUIjtpOjU0O3M6NDA6ImlmXChccypmaWxlX2V4aXN0c1woXHMqXCRzY2FtXHMqXC5ccypcJGkiO2k6NTU7czoyMDoiPHRpdGxlPlxzKkJlc3QudGlnZW4iO2k6NTY7czoyMDoiPHRpdGxlPlxzKkxBTkRFU0JBTksiO2k6NTc7czo1Mjoid2luZG93XC5sb2NhdGlvblxzKj1ccypbJyJdaW5kZXhcZCsqXC5waHBcP2NtZD1sb2dpbiI7aTo1ODtzOjU0OiJ3aW5kb3dcLmxvY2F0aW9uXHMqPVxzKlsnIl1pbmRleFxkKypcLmh0bWwqXD9jbWQ9bG9naW4iO2k6NTk7czoyNToiPHRpdGxlPlxzKk1haWxccyo8L3RpdGxlPiI7fQ=="));
 
 
-//var_dump($g_FlexDBShe);
-//exit;
-
-
 ////////////////////////////////////////////////////////////////////////////
 if (!isCli() && !isset($_SERVER['HTTP_USER_AGENT'])) {
   echo "#####################################################\n";
@@ -827,7 +824,16 @@ if (!isCli() && !isset($_SERVER['HTTP_USER_AGENT'])) {
   exit;
 }
 
-define('AI_VERSION', '20150601');
+
+if (version_compare(phpversion(), '5.3.1', '<')) {
+  echo "#####################################################\n";
+  echo "# Warning: PHP Version < 5.3.1                      #\n";
+  echo "# Some function might not work properly             #\n";
+  echo "# See FAQ: http://revisium.com/ai/faq.php           #\n";
+  echo "#####################################################\n";
+}
+
+define('AI_VERSION', '20150604');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1440,11 +1446,12 @@ if (isCli())
 		'l:' => 'list:',
 		'r:' => 'report:',
 		'f' => 'fast',
-		'j:' => 'file',
+		'j:' => 'file:',
 		'p:' => 'path:',
 		'q' => 'quite',
 		'e:' => 'cms:',
 		'x:' => 'mode:',
+		'k:' => 'skip:',
 		'h' => 'help'
 	);
 
@@ -1470,6 +1477,7 @@ Current default path is: {$defaults['path']}
   -d, --delay=INT      delay in milliseconds when scanning files to reduce load on the file system (Default: 1)
   -e, --cms=FILE       cms filename to load .aknown files from. E.g. --cms=wordpress
   -x, --mode=INT       Set scan mode. 0 - for basic, 1 - for expert and 2 for paranoic.
+  -k, --skip=jpg,...   Skip specific extensions. E.g. --skip=jpg,gif,png,xls,pdf
   -r, --report=PATH/EMAILS
                        Full path to create report or email address to send report to.
                        You can also specify multiple email separated by commas.
@@ -1550,6 +1558,14 @@ HELP;
 		}
 	}
 
+	if (
+		(isset($options['skip']) AND !empty($options['skip']) AND ($ext_list = $options['skip']) !== false)
+		OR (isset($options['k']) AND !empty($options['k']) AND ($ext_list = $options['k']) !== false)
+	)
+	{
+		$defaults['skip_ext'] = $ext_list;
+	}
+
 	if (isset($options['all']) OR isset($options['a']))
 	{
 		$defaults['scan_all_files'] = 1;
@@ -1562,9 +1578,9 @@ HELP;
     }
 
     if (isset($options['x'])) {
-        define('AI_EXPERT_MODE', $options['x']);
+        define('AI_EXPERT', $options['x']);
     } else if (isset($options['mode'])) {
-        define('AI_EXPERT_MODE', $options['mode']);
+        define('AI_EXPERT', $options['mode']);
     } else {
 		define('AI_EXPERT', AI_EXPERT_MODE); 
     }
@@ -1609,7 +1625,7 @@ HELP;
 if (!defined('PLAIN_FILE')) { define('PLAIN_FILE', ''); }
 
 // Init
-define('MAX_ALLOWED_PHP_HTML_IN_DIR', 100);
+define('MAX_ALLOWED_PHP_HTML_IN_DIR', 400);
 define('BASE64_LENGTH', 69);
 define('MAX_PREVIEW_LEN', 80);
 define('MAX_EXT_LINKS', 1001);
@@ -1983,7 +1999,7 @@ function QCR_ScanDirectories($l_RootDir)
 {
 	global $g_Structure, $g_Counter, $g_Doorway, $g_FoundTotalFiles, $g_FoundTotalDirs, 
 			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
-                        $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec;
+                        $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec, $g_IgnoredExt;
 
 	$l_DirCounter = 0;
 	$l_DoorwayFilesCounter = 0;
@@ -2021,6 +2037,10 @@ function QCR_ScanDirectories($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
+			if (in_array($l_Ext, $g_IgnoredExt)) {
+                           $l_NeedToScan = false;
+                        }
+
 
 			if ($l_IsDir)
 			{
@@ -2369,6 +2389,7 @@ function QCR_GoScan($par_Offset)
 			{
 				$g_TotalFiles++;
 
+			$l_TSStartScan = microtime(true);
                 $l_Content = @file_get_contents($l_Filename);
                 if (($l_Content == '') && ($g_Structure['s'][$i] > 0)) {
                    $g_NotRead[] = $i;
@@ -2381,6 +2402,7 @@ function QCR_GoScan($par_Offset)
 	        		   printProgress(++$_files_and_ignored, $l_Filename);
                                    continue;
                                 }
+
 				$l_UnicodeContent = detect_utf_encoding($l_Content);
 				$l_Unwrapped = $l_Content;
 				if ($l_UnicodeContent !== false) {
@@ -2395,7 +2417,7 @@ function QCR_GoScan($par_Offset)
 
 
 				// ignore itself
-				if (strpos($l_Content, 'OI87547234FGSHJGDFS45958761JW') !== false) {
+				if (strpos($l_Content, 'OI875GHJKJHG9876GDFS45958761JW') !== false) {
 					continue;
 				}
 
@@ -2645,9 +2667,15 @@ function QCR_GoScan($par_Offset)
 			unset($l_Content);
 			
 			printProgress(++$_files_and_ignored, $l_Filename);
+
+			$l_TSEndScan = microtime(true);
+			$l_Elapsed = $l_TSEndScan - $l_TSStartScan;
+                        if ($l_TSEndScan - $l_TSStartScan >= 0.5) {
+			   usleep(SCAN_DELAY * 1000);
+                        }
+
 		} // end of if (file)
 
-		usleep(SCAN_DELAY * 1000);
 
 	} // end of for
 
@@ -2878,7 +2906,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 {
   global $g_ExceptFlex, $gXX_FlexDBShe, $gX_FlexDBShe, $g_FlexDBShe, $gX_DBShe, $g_DBShe, $g_Base64, $g_Base64Fragment;
 
-  // OI87547234FGSHJGDFS45958761JW
+  // OI875GHJKJHG9876GDFS45958761JW
 
   foreach ($g_FlexDBShe as $l_Item) {
     if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
@@ -3156,6 +3184,7 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
         {
             if ($l_FileName == '.' || $l_FileName == '..') continue;
                if (strpos($l_FileName, $l_KnownFilename) !== false) {
+                           stdOut("Loading " . $l_FileName);
                            $g_KnownListTmp = file($l_AbsolutePathKnownFiles . '/' . $l_FileName);
                             for ($i = 0; $i < count($g_KnownListTmp); $i++) {
                                 $g_KnownListTmp[$i] = (int) trim($g_KnownListTmp[$i]);
@@ -3172,6 +3201,17 @@ $g_KnownList = array_flip($g_KnownList);
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
 QCR_Debug();
+
+	$defaults['skip_ext'] = trim($defaults['skip_ext']);
+         if ($defaults['skip_ext'] != '') {
+	    $g_IgnoredExt = explode(',', $defaults['skip_ext']);
+	    for ($i = 0; $i < count($g_IgnoredExt); $i++) {
+                $g_IgnoredExt[$i] = trim($g_IgnoredExt[$i]);
+             }
+
+	    QCR_Debug('Skip files with extensions: ' . implode(',', $g_IgnoredExt));
+	    stdOut('Skip extensions: ' . implode(',', $g_IgnoredExt));
+         } 
 
 // scan single file
 if (defined('SCAN_FILE')) {
