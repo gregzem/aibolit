@@ -2909,7 +2909,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
   // OI875GHJKJHG9876GDFS45958761JW
 
   foreach ($g_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
@@ -2925,7 +2925,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 
 if (AI_EXPERT > 1) {
   foreach ($gXX_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
@@ -2942,7 +2942,7 @@ if (AI_EXPERT > 1) {
 
 if (AI_EXPERT > 0) {
   foreach ($gX_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
