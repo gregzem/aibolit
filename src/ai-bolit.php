@@ -3185,18 +3185,14 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
             if ($l_FileName == '.' || $l_FileName == '..') continue;
                if (strpos($l_FileName, $l_KnownFilename) !== false) {
                            stdOut("Loading " . $l_FileName);
-                           $g_KnownListTmp = file($l_AbsolutePathKnownFiles . '/' . $l_FileName);
-                            for ($i = 0; $i < count($g_KnownListTmp); $i++) {
-                                $g_KnownListTmp[$i] = (int) trim($g_KnownListTmp[$i]);
-                            }
-
-                            $g_KnownList = array_merge($g_KnownListTmp, $g_KnownList);
+                           foreach (new SplFileObject($l_AbsolutePathKnownFiles . '/' . $l_FileName) as $line) {
+                               $g_KnownList[(int) $line] = 1;
+                           }
                        }
         }
         closedir($l_DIRH);
     }
 }
-$g_KnownList = array_flip($g_KnownList);
 
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
