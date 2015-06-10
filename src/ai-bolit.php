@@ -2690,7 +2690,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
   if (AI_EXTRA_WARN) {
   	foreach ($g_SusDB as $l_Item) {
-    	if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    	if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        	 	if (!CheckException($l_Content, $l_Found)) {
            	 	$l_Pos = $l_Found[0][1];
            	 	$l_SigId = myCheckSum($l_Item);
@@ -2702,7 +2702,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
   if (AI_EXPERT < 2) {
     	foreach ($gXX_FlexDBShe as $l_Item) {
-      		if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+      		if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
              	$l_Pos = $l_Found[0][1];
              	$l_SigId = myCheckSum($l_Item);
         	    return true;
@@ -2713,7 +2713,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
     if (AI_EXPERT < 1) {
     	foreach ($gX_FlexDBShe as $l_Item) {
-      		if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+      		if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
              	$l_Pos = $l_Found[0][1];
              	$l_SigId = myCheckSum($l_Item);
         	    return true;
