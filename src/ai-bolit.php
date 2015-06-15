@@ -2690,7 +2690,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
   if (AI_EXTRA_WARN) {
   	foreach ($g_SusDB as $l_Item) {
-    	if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    	if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        	 	if (!CheckException($l_Content, $l_Found)) {
            	 	$l_Pos = $l_Found[0][1];
            	 	$l_SigId = myCheckSum($l_Item);
@@ -2702,7 +2702,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
   if (AI_EXPERT < 2) {
     	foreach ($gXX_FlexDBShe as $l_Item) {
-      		if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+      		if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
              	$l_Pos = $l_Found[0][1];
              	$l_SigId = myCheckSum($l_Item);
         	    return true;
@@ -2713,7 +2713,7 @@ function WarningPHP($l_FN, $l_Content, &$l_Pos, &$l_SigId)
 
     if (AI_EXPERT < 1) {
     	foreach ($gX_FlexDBShe as $l_Item) {
-      		if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+      		if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
              	$l_Pos = $l_Found[0][1];
              	$l_SigId = myCheckSum($l_Item);
         	    return true;
@@ -2909,7 +2909,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
   // OI875GHJKJHG9876GDFS45958761JW
 
   foreach ($g_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
@@ -2925,7 +2925,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 
 if (AI_EXPERT > 1) {
   foreach ($gXX_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
@@ -2942,7 +2942,7 @@ if (AI_EXPERT > 1) {
 
 if (AI_EXPERT > 0) {
   foreach ($gX_FlexDBShe as $l_Item) {
-    if (preg_match('#(' . $l_Item . ')#smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
+    if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
        if (!CheckException($l_Content, $l_Found)) {
            $l_Pos = $l_Found[0][1];
            $l_SigId = myCheckSum($l_Item);
@@ -3185,18 +3185,14 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
             if ($l_FileName == '.' || $l_FileName == '..') continue;
                if (strpos($l_FileName, $l_KnownFilename) !== false) {
                            stdOut("Loading " . $l_FileName);
-                           $g_KnownListTmp = file($l_AbsolutePathKnownFiles . '/' . $l_FileName);
-                            for ($i = 0; $i < count($g_KnownListTmp); $i++) {
-                                $g_KnownListTmp[$i] = (int) trim($g_KnownListTmp[$i]);
-                            }
-
-                            $g_KnownList = array_merge($g_KnownListTmp, $g_KnownList);
+                           foreach (new SplFileObject($l_AbsolutePathKnownFiles . '/' . $l_FileName) as $line) {
+                               $g_KnownList[(int) $line] = 1;
+                           }
                        }
         }
         closedir($l_DIRH);
     }
 }
-$g_KnownList = array_flip($g_KnownList);
 
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
