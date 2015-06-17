@@ -2014,13 +2014,13 @@ function QCR_ScanDirectories($l_RootDir)
 		{
 			if ($l_FileName == '.' || $l_FileName == '..') continue;
 
+			$l_FileName = $l_RootDir . DIR_SEPARATOR . $l_FileName;
+
                         if (is_link($l_FileName)) 
                         {
                             $g_SymLinks[] = $l_FileName;
                             continue;
                         }
-
-			$l_FileName = $l_RootDir . DIR_SEPARATOR . $l_FileName;
 
 			$l_Ext = substr($l_FileName, strrpos($l_FileName, '.') + 1);
 			$l_IsDir = is_dir($l_FileName);
