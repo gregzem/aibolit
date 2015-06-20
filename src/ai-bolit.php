@@ -1455,7 +1455,12 @@ if (isCli())
 		'h' => 'help'
 	);
 
-	$options = getopt(implode('', array_keys($cli_options)), array_values($cli_options));
+	$cli_longopts = array(
+		'cmd:'
+	);
+	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
+
+	$options = getopt(implode('', array_keys($cli_options)), $cli_longopts);
 
 	if (isset($options['h']) OR isset($options['help']))
 	{
@@ -1482,6 +1487,8 @@ Current default path is: {$defaults['path']}
                        Full path to create report or email address to send report to.
                        You can also specify multiple email separated by commas.
   -q, 		       Use only with -j. Quiet result check of file, 1=Infected 
+      --cmd="command [args...]"
+                       Run command after scanning
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -3727,6 +3734,11 @@ stdOut("Scanning complete! Time taken: " . seconds2Human($time_taken));
 stdOut("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 stdOut("Attention! DO NOT LEAVE either ai-bolit.php or AI-BOLIT-REPORT-<xxxx>-<yy>.html \nfile on server. COPY it locally then REMOVE from server. ");
 stdOut("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+
+if (isset($options['cmd'])) {
+	stdOut("Run \"{$options['cmd']}\" ");
+	system($options['cmd']);
+}
 
 QCR_Debug();
 
