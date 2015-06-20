@@ -64,6 +64,7 @@ define('DEBUG_MODE', 0);
 define('DIR_SEPARATOR', '/');
 
 define('DOUBLECHECK_FILE', 'AI-BOLIT-DOUBLECHECK.php');
+define('QUEUE_FILENAME', 'AI-BOLIT-QUEUE.txt');
 
 if ((isset($_SERVER['OS']) && stripos('Win', $_SERVER['OS']) !== false)/* && stripos('CygWin', $_SERVER['OS']) === false)*/) {
    define('DIR_SEPARATOR', '\\');
@@ -1457,7 +1458,8 @@ if (isCli())
 		'h' => 'help'
 	);
 	$cli_longopts = array(
-		'cmd:'
+		'cmd:',
+		'one-pass'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1490,6 +1492,7 @@ Current default path is: {$defaults['path']}
   -q, 		       Use only with -j. Quiet result check of file, 1=Infected 
       --cmd="command [args...]"
                        Run command after scanning
+      --one-pass       Not to count the remaining time
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -1626,8 +1629,11 @@ HELP;
 		$l_SpecifiedPath = true;
 	}
 
+	define('ONE_PASS', isset($options['one-pass']));
+    
 } else {
    define('AI_EXPERT', AI_EXPERT_MODE); 
+   define('ONE_PASS', true);
 }
 
 if (!defined('PLAIN_FILE')) { define('PLAIN_FILE', ''); }
@@ -2009,6 +2015,8 @@ function QCR_ScanDirectories($l_RootDir)
 			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
                         $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec, $g_IgnoredExt;
 
+	static $l_Buffer = '';
+
 	$l_DirCounter = 0;
 	$l_DoorwayFilesCounter = 0;
 	$l_SourceDirIndex = $g_Counter - 1;
@@ -2073,8 +2081,8 @@ function QCR_ScanDirectories($l_RootDir)
 	               $g_HiddenFiles[] = $l_FileName;
 	            }
 
-				$g_Structure['d'][$g_Counter] = $l_IsDir;
-				$g_Structure['n'][$g_Counter] = $l_FileName;
+//				$g_Structure['d'][$g_Counter] = $l_IsDir;
+//				$g_Structure['n'][$g_Counter] = $l_FileName;
 
 				$l_DirCounter++;
 
@@ -2084,7 +2092,7 @@ function QCR_ScanDirectories($l_RootDir)
 					$l_DirCounter = -655360;
 				}
 
-				$g_Counter++;
+//				$g_Counter++;
 				$g_FoundTotalDirs++;
 
 				QCR_ScanDirectories($l_FileName);
@@ -2109,14 +2117,16 @@ function QCR_ScanDirectories($l_RootDir)
 						}
 					}
 
-
-					$l_Stat = stat($l_FileName);
-
-					$g_Structure['d'][$g_Counter] = $l_IsDir;
-					$g_Structure['n'][$g_Counter] = $l_FileName;
-					$g_Structure['s'][$g_Counter] = $l_Stat['size'];
-					$g_Structure['c'][$g_Counter] = $l_Stat['ctime'];
-					$g_Structure['m'][$g_Counter] = $l_Stat['mtime'];
+					if (ONE_PASS) {
+						QCR_ScanFile($l_FileName, $g_Counter++);
+					} else {
+						$l_Buffer .= $l_FileName."\n";
+						if (strlen($l_Buffer) > 32000)
+						{ 
+							file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+							$l_Buffer = '';
+						}
+					}
 
 					$g_Counter++;
 				}
@@ -2125,33 +2135,13 @@ function QCR_ScanDirectories($l_RootDir)
 
 		closedir($l_DIRH);
 	}
+	
+	if (($l_RootDir == ROOT_PATH) && !empty($l_Buffer)) {
+		file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+		$l_Buffer = '';
+	}
 
-	return $g_Structure;
 }
-
-
-///////////////////////////////////////////////////////////////////////////
-function QCR_ScanFile($l_TheFile)
-{
-	global $g_Structure, $g_Counter, $g_Doorway, $g_FoundTotalFiles, $g_FoundTotalDirs, 
-			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
-                        $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles;
-
-	QCR_Debug('Scan file ' . $l_TheFile);
-
-      	$l_Stat = stat($l_TheFile);
-
-      	$g_Structure['d'][$g_Counter] = false;
-      	$g_Structure['n'][$g_Counter] = $l_TheFile;
-      	$g_Structure['s'][$g_Counter] = $l_Stat['size'];
-      	$g_Structure['c'][$g_Counter] = $l_Stat['ctime'];
-      	$g_Structure['m'][$g_Counter] = $l_Stat['mtime'];
-
-      	$g_Counter++;
-
-	return $g_Structure;
-}
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2274,7 +2264,7 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 		$l_Vuln['id'] = 'AFU : FCKEDITOR : http://www.exploit-db.com/exploits/17644/ & /exploit/249';
 		$l_Vuln['ndx'] = $par_Index;
 		$g_Vulnerable[] = $l_Vuln;
-		return;
+		return true;
 	}
 
 	if ((stripos($par_Filename, 'inc_php/image_view.class.php') !== false) ||
@@ -2283,9 +2273,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'AFU : REVSLIDER : http://www.exploit-db.com/exploits/35385/';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (stripos($par_Filename, 'includes/database/database.inc') !== false) {
@@ -2293,9 +2284,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'SQLI : DRUPAL : CVE-2014-3704';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (stripos($par_Filename, 'engine/classes/min/index.php') !== false) {
@@ -2303,9 +2295,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'AFD : MINIFY : CVE-2013-6619';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (( stripos($par_Filename, 'timthumb.php') !== false ) || 
@@ -2316,9 +2309,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'RCE : TIMTHUMB : CVE-2011-4106,CVE-2014-4663';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (stripos($par_Filename, 'fancybox-for-wordpress/fancybox.php') !== false) {
@@ -2326,9 +2320,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'CODE INJECTION : FANCYBOX';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (stripos($par_Filename, 'tiny_mce/plugins/tinybrowser/tinybrowser.php') !== false) {	
@@ -2336,7 +2331,7 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 		$l_Vuln['ndx'] = $par_Index;
 		$g_Vulnerable[] = $l_Vuln;
 		
-		return;
+		return true;
 	}
 
 	if (stripos($par_Filename, 'scripts/setup.php') !== false) {		
@@ -2344,9 +2339,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'CODE INJECTION : PHPMYADMIN : http://1337day.com/exploit/5334';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 	if (stripos($par_Filename, '/uploadify.php') !== false) {		
@@ -2354,9 +2350,10 @@ function CheckVulnerability($par_Filename, $par_Index, $par_Content) {
 			$l_Vuln['id'] = 'AFU : UPLOADIFY : CVE: 2012-1153';
 			$l_Vuln['ndx'] = $par_Index;
 			$g_Vulnerable[] = $l_Vuln;
+			return true;
 		}
 		
-		return;
+		return false;
 	}
 
 }
@@ -2370,26 +2367,34 @@ function QCR_GoScan($par_Offset)
 		   $g_NotRead, $g_WarningPHPFragment, $g_WarningPHPSig, $g_BigFiles, $g_RedirectPHPFragment, $g_EmptyLinkSrc, $g_CriticalPHPSig, $g_CriticalPHPFragment, 
            $g_Base64Fragment, $g_UnixExec, $g_PhishingSigFragment, $g_PhishingFragment, $g_PhishingSig, $g_CriticalJSSig, $g_IframerFragment, $g_CMS, $defaults, $g_AdwareListFragment, $g_KnownList,$g_Vulnerable;
 
-	static $_files_and_ignored = 0;
-
     QCR_Debug('QCR_GoScan ' . $par_Offset);
 
-	for ($i = $par_Offset; $i < $g_Counter; $i++)
-	{
-		$l_Filename = $g_Structure['n'][$i];
+	$i = 0;
+	foreach (new SplFileObject(QUEUE_FILENAME)as $l_Filename) {
+		QCR_ScanFile(trim($l_Filename), $i++);
+	}
 
- 	        QCR_Debug('Check ' . $l_Filename);
+}
 
-		if ($g_Structure['d'][$i])
-		{
-			// FOLDER
-			$g_TotalFolder++;
-		}
-		else
-		{
+///////////////////////////////////////////////////////////////////////////
+function QCR_ScanFile($l_Filename, $i = 0)
+{
+	global $g_IframerFragment, $g_Iframer, $g_Redirect, $g_Doorway, $g_EmptyLink, $g_Structure, $g_Counter, 
+		   $g_HeuristicType, $g_HeuristicDetected, $g_TotalFolder, $g_TotalFiles, $g_WarningPHP, $g_AdwareList,
+		   $g_CriticalPHP, $g_Phishing, $g_CriticalJS, $g_UrlIgnoreList, $g_CriticalJSFragment, $g_PHPCodeInside, $g_PHPCodeInsideFragment, 
+		   $g_NotRead, $g_WarningPHPFragment, $g_WarningPHPSig, $g_BigFiles, $g_RedirectPHPFragment, $g_EmptyLinkSrc, $g_CriticalPHPSig, $g_CriticalPHPFragment, 
+           $g_Base64Fragment, $g_UnixExec, $g_PhishingSigFragment, $g_PhishingFragment, $g_PhishingSig, $g_CriticalJSSig, $g_IframerFragment, $g_CMS, $defaults, $g_AdwareListFragment, $g_KnownList,$g_Vulnerable;
+
+	global $g_crc;
+	static $_files_and_ignored = 0;
+
+			$r_detected = false;
+			$l_Stat = stat($l_Filename);
+
+			QCR_Debug('Scan file ' . $l_Filename);
 
 			// FILE
-			if ((MAX_SIZE_TO_SCAN > 0 AND $g_Structure['s'][$i] > MAX_SIZE_TO_SCAN) || ($g_Structure['s'][$i] < 0))
+			if ((MAX_SIZE_TO_SCAN > 0 AND $l_Stat['size'] > MAX_SIZE_TO_SCAN) || ($l_Stat['size'] < 0))
 			{
 				$g_BigFiles[] = $i;
 			}
@@ -2399,16 +2404,17 @@ function QCR_GoScan($par_Offset)
 
 			$l_TSStartScan = microtime(true);
                 $l_Content = @file_get_contents($l_Filename);
-                if (($l_Content == '') && ($g_Structure['s'][$i] > 0)) {
+                if (($l_Content == '') && ($l_Stat['size'] > 0)) {
                    $g_NotRead[] = $i;
+                   $r_detected = true;
                 }
 
-				$g_Structure['crc'][$i] = realCRC($l_Content);
+				$g_crc = realCRC($l_Content);
 
-                                $l_KnownCRC = $g_Structure['crc'][$i] + realCRC(basename($l_Filename));
+                                $l_KnownCRC = $g_crc + realCRC(basename($l_Filename));
                                 if ( isset($g_KnownList[$l_KnownCRC]) ) {
 	        		   printProgress(++$_files_and_ignored, $l_Filename);
-                                   continue;
+                                   return;
                                 }
 
 				$l_UnicodeContent = detect_utf_encoding($l_Content);
@@ -2418,6 +2424,7 @@ function QCR_GoScan($par_Offset)
                                       $l_Unwrapped = mb_convert_encoding($l_Unwrapped, "CP1251");
                                    } else {
                                       $g_NotRead[] = $i;
+                                      $r_detected = true;
 				   }
                                 }
 
@@ -2426,19 +2433,20 @@ function QCR_GoScan($par_Offset)
 
 				// ignore itself
 				if (strpos($l_Content, 'OI875GHJKJHG9876GDFS45958761JW') !== false) {
-					continue;
+					return;
 				}
 
 				// unix executables
 				if (strpos($l_Content, chr(127) . 'ELF') !== false) 
 				{
                     $g_UnixExec[] = $l_Filename;
-					continue;
+					AddResult($l_Filename, $i);
+					return;
                 }
 				
 				
 				// check vulnerability in files
-				CheckVulnerability($l_Filename, $i, $l_Content);
+				$r_detected = CheckVulnerability($l_Filename, $i, $l_Content);
 
 				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
 
@@ -2481,6 +2489,7 @@ function QCR_GoScan($par_Offset)
 			    if ((!$g_SkipNextCheck) && HeuristicChecker($l_Content, $l_TypeDe, $l_Filename)) {
 					$g_HeuristicDetected[] = $i;
 					$g_HeuristicType[] = $l_TypeDe;
+					$r_detected = true;
 				}
 
 				// critical JS
@@ -2521,6 +2530,7 @@ function QCR_GoScan($par_Offset)
 							if  (($l_Pos !== false ) && (!knowUrl($l_Found[$kk][0]))) {
          						$g_Iframer[] = $i;
          						$g_IframerFragment[] = getFragment($l_Found[$kk][0], $l_Pos);
+         						$r_detected = true;
 							}
 						}
 					}
@@ -2543,6 +2553,7 @@ function QCR_GoScan($par_Offset)
 								if ($l_NeedToAdd && (count($g_EmptyLink) < MAX_EXT_LINKS)) {
 									$g_EmptyLink[] = $i;
 									$g_EmptyLinkSrc[$i][] = substr($l_Found[$kk][0], 0, MAX_PREVIEW_LEN);
+									$r_detected = true;
 								}
 							}
 						}
@@ -2557,6 +2568,7 @@ function QCR_GoScan($par_Offset)
 					{
 						$g_PHPCodeInside[] = $i;
 						$g_PHPCodeInsideFragment[] = getFragment($l_Unwrapped, $l_Pos);
+						$r_detected = true;
 					}
 				}
 
@@ -2564,7 +2576,6 @@ function QCR_GoScan($par_Offset)
 				if (stripos($l_Filename, '.htaccess'))
 				{
 				
-					$r_detected = false;
 					if (stripos($l_Content, 'index.php?name=$1') !== false ||
 						stripos($l_Content, 'index.php?m=1') !== false
 					)
@@ -2653,6 +2664,7 @@ function QCR_GoScan($par_Offset)
 					$g_WarningPHP[$l_Prio][] = $i;
 					$g_WarningPHPFragment[$l_Prio][] = getFragment($l_Content, $l_Pos);
 					$g_WarningPHPSig[] = $l_SigId;
+					$r_detected = true;
 				}
 				
 
@@ -2661,12 +2673,14 @@ function QCR_GoScan($par_Offset)
 				{
 					$g_AdwareList[] = $i;
 					$g_AdwareListFragment[] = getFragment($l_Unwrapped, $l_Pos);
+					$r_detected = true;
 				}
 
 				// articles
 				if (stripos($l_Filename, 'article_index'))
 				{
 					$g_AdwareSig[] = $i;
+					$r_detected = true;
 				}
 			}
 		} // end of if (!$g_SkipNextCheck) {
@@ -2682,11 +2696,23 @@ function QCR_GoScan($par_Offset)
 			   usleep(SCAN_DELAY * 1000);
                         }
 
-		} // end of if (file)
+			if ($g_SkipNextCheck || $r_detected) {
+				AddResult($l_Filename, $i);
+			}
 
 
-	} // end of for
+}
 
+function AddResult($l_Filename, $i)
+{
+	global $g_Structure, $g_crc;
+	
+	$l_Stat = stat($l_Filename);
+	$g_Structure['n'][$i] = $l_Filename;
+	$g_Structure['s'][$i] = $l_Stat['size'];
+	$g_Structure['c'][$i] = $l_Stat['ctime'];
+	$g_Structure['m'][$i] = $l_Stat['mtime'];
+	$g_Structure['crc'][$i] = $g_crc;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -3053,6 +3079,8 @@ if (AI_EXPERT > 1) {
           echo "CRIT 7: $l_FN matched [$l_Item] in $l_Pos\n";
      }
 
+     AddResult($l_FN, $l_Index);
+
      return false;
   }
 
@@ -3065,6 +3093,8 @@ if (AI_EXPERT > 1) {
      if (DEBUG_MODE) {
         echo "CRIT 10: $l_FN matched\n";
      }
+
+     AddResult($l_FN, $l_Index);
   }
 
   return false;
@@ -3233,10 +3263,11 @@ if (defined('SCAN_FILE')) {
    if (!$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
       $l_FHList = fopen(DOUBLECHECK_FILE, "r");
+      $i = 0;
       while(!feof($l_FHList)) {
          $l_FN = trim(fgets($l_FHList));
          if (file_exists($l_FN)) {
-            QCR_ScanFile($l_FN); 
+            QCR_ScanFile($l_FN, $i++); 
          }
       }
 
@@ -3245,18 +3276,22 @@ if (defined('SCAN_FILE')) {
    } else {
       // scan whole file system
       stdOut("Start scanning '" . ROOT_PATH . "'.");
+      
+      file_exists(QUEUE_FILENAME) && unlink(QUEUE_FILENAME);
       QCR_ScanDirectories(ROOT_PATH);
+
    }
 }
 
-$g_FoundTotalFiles = count($g_Structure['n']);
+//$g_FoundTotalFiles = count($g_Structure['n']);
+$g_FoundTotalFiles = $g_Counter;
 
 QCR_Debug();
 
 stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
 stdOut(str_repeat(' ', 160),false);
 
-$g_FoundTotalFiles = count($g_Structure['n']);
+//$g_FoundTotalFiles = count($g_Structure['n']);
 
 // detect version CMS
 $l_CmsListDetector = new CmsVersionDetector('.');
@@ -3265,8 +3300,10 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
+if (!(ONE_PASS || defined('SCAN_FILE') || file_exists(DOUBLECHECK_FILE))) {
 QCR_GoScan(0);
-
+unlink(QUEUE_FILENAME);
+}
 QCR_Debug();
 
 
