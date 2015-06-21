@@ -2084,6 +2084,11 @@ function QCR_ScanDirectories($l_RootDir)
 
 //				$g_Structure['d'][$g_Counter] = $l_IsDir;
 //				$g_Structure['n'][$g_Counter] = $l_FileName;
+				if (ONE_PASS) {
+					$g_Structure['n'][$g_Counter] = $l_FileName . DIR_SEPARATOR;
+				} else {
+					$l_Buffer .= $l_FileName . DIR_SEPARATOR . "\n";
+				}
 
 				$l_DirCounter++;
 
@@ -2093,7 +2098,7 @@ function QCR_ScanDirectories($l_RootDir)
 					$l_DirCounter = -655360;
 				}
 
-//				$g_Counter++;
+				$g_Counter++;
 				$g_FoundTotalDirs++;
 
 				QCR_ScanDirectories($l_FileName);
@@ -2122,16 +2127,18 @@ function QCR_ScanDirectories($l_RootDir)
 						QCR_ScanFile($l_FileName, $g_Counter++);
 					} else {
 						$l_Buffer .= $l_FileName."\n";
-						if (strlen($l_Buffer) > 32000)
-						{ 
-							file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
-							$l_Buffer = '';
-						}
 					}
 
 					$g_Counter++;
 				}
 			}
+
+			if (strlen($l_Buffer) > 32000)
+			{ 
+				file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+				$l_Buffer = '';
+			}
+
 		}
 
 		closedir($l_DIRH);
@@ -2391,6 +2398,13 @@ function QCR_ScanFile($l_Filename, $i = 0)
 
 			$r_detected = false;
 			$l_Stat = stat($l_Filename);
+
+			if (substr($l_Filename, -1) == DIR_SEPARATOR) {
+				// FOLDER
+				$g_Structure['n'][$i] = $l_Filename;
+				$g_TotalFolder++;
+				return;
+			}
 
 			QCR_Debug('Scan file ' . $l_Filename);
 
