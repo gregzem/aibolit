@@ -1460,7 +1460,8 @@ if (isCli())
 
 	$cli_longopts = array(
 		'cmd:',
-		'one-pass'
+		'one-pass',
+		'quarantine'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1494,6 +1495,7 @@ Current default path is: {$defaults['path']}
       --cmd="command [args...]"
                        Run command after scanning
       --one-pass       Do not calculate remaining time
+      --quarantine     Archive all malware from report
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -3792,6 +3794,10 @@ stdOut("\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 stdOut("Attention! DO NOT LEAVE either ai-bolit.php or AI-BOLIT-REPORT-<xxxx>-<yy>.html \nfile on server. COPY it locally then REMOVE from server. ");
 stdOut("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
 
+if (isset($options['quarantine'])) {
+	Quarantine();
+}
+
 if (isset($options['cmd'])) {
 	stdOut("Run \"{$options['cmd']}\" ");
 	system($options['cmd']);
@@ -3856,4 +3862,106 @@ function RemoveCommentsPHP($src) {
   | /\*(?:[^*]+|\*(?!/))*+\*/      # multi line comment /* */
 )?
 @xs', '', $src);
+}
+
+function Quarantine()
+{
+	if (!file_exists(DOUBLECHECK_FILE)) {
+		return;
+	}
+	
+	$g_QuarantinePass = 'aibolit';
+	
+	$archive = "AI-QUARANTINE-" .rand(100000, 999999) . ".zip";
+	$infoFile = substr($archive, 0, -3) . "txt";
+	$report = REPORT_PATH . DIR_SEPARATOR . REPORT_FILE;
+	
+
+	foreach (file(DOUBLECHECK_FILE) as $file) {
+		$file = trim($file);
+		if (!is_file($file)) continue;
+	
+		$lStat = stat($file);
+		
+		// skip files over 300KB
+		if ($lStat['size'] > 300*1024) continue;
+
+		// http://www.askapache.com/security/chmod-stat.html
+		$p = $lStat['mode'];
+		$perm ='-';
+		$perm.=(($p&0x0100)?'r':'-').(($p&0x0080)?'w':'-');
+		$perm.=(($p&0x0040)?(($p&0x0800)?'s':'x'):(($p&0x0800)?'S':'-'));
+		$perm.=(($p&0x0020)?'r':'-').(($p&0x0010)?'w':'-');
+		$perm.=(($p&0x0008)?(($p&0x0400)?'s':'x'):(($p&0x0400)?'S':'-'));
+		$perm.=(($p&0x0004)?'r':'-').(($p&0x0002)?'w':'-');
+		$perm.=(($p&0x0001)?(($p&0x0200)?'t':'x'):(($p&0x0200)?'T':'-'));
+		
+		$owner = (function_exists('posix_getpwuid'))? @posix_getpwuid($lStat['uid']) : array('name' => $lStat['uid']);
+		$group = (function_exists('posix_getgrgid'))? @posix_getgrgid($lStat['gid']) : array('name' => $lStat['uid']);
+
+		$inf['permission'][] = $perm;
+		$inf['owner'][] = $owner['name'];
+		$inf['group'][] = $group['name'];
+		$inf['size'][] = $lStat['size'] > 0 ? bytes2Human($lStat['size']) : '-';
+		$inf['ctime'][] = $lStat['ctime'] > 0 ? date("d/m/Y H:i:s", $lStat['ctime']) : '-';
+		$inf['mtime'][] = $lStat['mtime'] > 0 ? date("d/m/Y H:i:s", $lStat['mtime']) : '-';
+		$files[] = strpos($file, './') === 0 ? substr($file, 2) : $file;
+	}
+	
+	// get columns width
+	$width = array();
+	foreach (array_keys($inf) as $k) {
+		$width[$k] = strlen($k);
+		for ($i = 0; $i < count($inf[$k]); ++$i) {
+			$len = strlen($inf[$k][$i]);
+			if ($len > $width[$k])
+				$width[$k] = $len;
+		}
+	}
+
+	// headings of columns
+	$info = '';
+	foreach (array_keys($inf) as $k) {
+		$info .= str_pad($k, $width[$k], ' ', STR_PAD_LEFT). ' ';
+	}
+	$info .= "name\n";
+	
+	for ($i = 0; $i < count($files); ++$i) {
+		foreach (array_keys($inf) as $k) {
+			$info .= str_pad($inf[$k][$i], $width[$k], ' ', STR_PAD_LEFT). ' ';
+		}
+		$info .= $files[$i]."\n";
+	}
+	unset($inf, $width);
+
+	exec("zip -v 2>&1", $output,$code);
+	
+	if ($code == 0) {
+		exec("cat AI-BOLIT-DOUBLECHECK.php|zip -@ --password $g_QuarantinePass $archive", $output, $code);
+		if ($code == 0) {
+			file_put_contents($infoFile, $info);
+			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report");
+			stdOut("\nCreate archive '" . realpath($archive) . "'");
+			stdOut("This archive have password '$g_QuarantinePass'");
+			unlink($infoFile);
+			return;
+		}
+	}
+	
+	$zip = new ZipArchive;
+	
+	if ($zip->open($archive, ZIPARCHIVE::CREATE | ZIPARCHIVE::OVERWRITE) === false) {
+		stdOut("Cannot create '$archive'.");
+		return;
+	}
+
+	foreach ($files as $file) {
+		$zip->addFile($file);
+	}
+	$zip->addFile($report, REPORT_FILE);
+	$zip->addFromString($infoFile, $info);
+	$zip->close();
+
+	stdOut("\nCreate archive '" . realpath($archive) . "'.");
+	stdOut("This archive has no password!");
 }
