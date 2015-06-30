@@ -3253,6 +3253,16 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
 
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
+try {
+	$s_file = new SplFileObject($g_AiBolitAbsolutePath."/aibolit.sig");
+	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+	foreach ($s_file as $line) {
+		$g_FlexDBShe[] = preg_replace('~\G(?:[^#\\\\]+|\\\\.)*+\K#~', '\\#', $line); // escaping #
+	}
+	stdOut("Loaded " . $s_file->key() . " signatures from aibolit.sig");
+	$s_file = null; // file handler is closed
+} catch (Exception $e) { QCR_Debug( "Import aibolit.sig " . $e->getMessage() ); }
+
 QCR_Debug();
 
 	$defaults['skip_ext'] = trim($defaults['skip_ext']);
