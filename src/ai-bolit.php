@@ -2465,8 +2465,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				// check vulnerability in files
 				$r_detected = CheckVulnerability($l_Filename, $i, $l_Content);
 
-				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
-
+				$l_Unwrapped = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
 				
 				// critical
 				$g_SkipNextCheck = false;
@@ -3254,6 +3253,16 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
 }
 
 stdOut("Loaded " . count($g_KnownList) . ' known files');
+
+try {
+	$s_file = new SplFileObject($g_AiBolitAbsolutePath."/aibolit.sig");
+	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+	foreach ($s_file as $line) {
+		$g_FlexDBShe[] = preg_replace('~\G(?:[^#\\\\]+|\\\\.)*+\K#~', '\\#', $line); // escaping #
+	}
+	stdOut("Loaded " . $s_file->key() . " signatures from aibolit.sig");
+	$s_file = null; // file handler is closed
+} catch (Exception $e) { QCR_Debug( "Import aibolit.sig " . $e->getMessage() ); }
 
 QCR_Debug();
 
