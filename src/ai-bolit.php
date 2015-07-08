@@ -3290,16 +3290,20 @@ if (defined('SCAN_FILE')) {
    // scan list of files from file
    if (!$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
-      $l_FHList = fopen(DOUBLECHECK_FILE, "r");
+      $s_file = new SplFileObject(DOUBLECHECK_FILE);
+      $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+      // force to seek to last line
+      $s_file->seek(PHP_INT_MAX);
+      // get number of lines
+      $g_FoundTotalFiles = $g_Counter = $s_file->key();
       $i = 0;
-      while(!feof($l_FHList)) {
-         $l_FN = trim(fgets($l_FHList));
+      foreach ($s_file as $l_FN) {
          if (file_exists($l_FN)) {
             QCR_ScanFile($l_FN, $i++); 
          }
       }
 
-      fclose($l_FHList);
+      $s_file = null;
 
    } else {
       // scan whole file system
