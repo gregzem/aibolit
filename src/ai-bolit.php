@@ -836,7 +836,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150701');
+define('AI_VERSION', '20150705');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2395,10 +2395,10 @@ function QCR_ScanFile($l_Filename, $i = 0)
 		   $g_NotRead, $g_WarningPHPFragment, $g_WarningPHPSig, $g_BigFiles, $g_RedirectPHPFragment, $g_EmptyLinkSrc, $g_CriticalPHPSig, $g_CriticalPHPFragment, 
            $g_Base64Fragment, $g_UnixExec, $g_PhishingSigFragment, $g_PhishingFragment, $g_PhishingSig, $g_CriticalJSSig, $g_IframerFragment, $g_CMS, $defaults, $g_AdwareListFragment, $g_KnownList,$g_Vulnerable;
 
-	global $g_crc;
+	global $g_CRC;
 	static $_files_and_ignored = 0;
 
-			$r_detected = false;
+			$l_CriticalDetected = false;
 			$l_Stat = stat($l_Filename);
 
 			if (substr($l_Filename, -1) == DIR_SEPARATOR) {
@@ -2427,9 +2427,21 @@ function QCR_ScanFile($l_Filename, $i = 0)
                    AddResult($l_Filename, $i);
                 }
 
-				$g_crc = realCRC($l_Content);
+				// ignore itself
+				if (strpos($l_Content, 'HLKHLKJHKLHJGJG6789869869GGHJ') !== false) {
+					return;
+				}
 
-                                $l_KnownCRC = $g_crc + realCRC(basename($l_Filename));
+				// unix executables
+				if (strpos($l_Content, chr(127) . 'ELF') !== false) 
+				{
+                    $g_UnixExec[] = $l_Filename;
+					return;
+                }
+
+				$g_CRC = realCRC($l_Content);
+
+                                $l_KnownCRC = $g_CRC + realCRC(basename($l_Filename));
                                 if ( isset($g_KnownList[$l_KnownCRC]) ) {
 	        		   printProgress(++$_files_and_ignored, $l_Filename);
                                    return;
@@ -2447,23 +2459,9 @@ function QCR_ScanFile($l_Filename, $i = 0)
                                 }
 
 				$l_Unwrapped = UnwrapObfu($l_Unwrapped);
-
-
-				// ignore itself
-				if (strpos($l_Content, 'OI875GHJKJHG9876GDFS45958761JW') !== false) {
-					return;
-				}
-
-				// unix executables
-				if (strpos($l_Content, chr(127) . 'ELF') !== false) 
-				{
-                    $g_UnixExec[] = $l_Filename;
-					return;
-                }
-				
 				
 				// check vulnerability in files
-				$r_detected = CheckVulnerability($l_Filename, $i, $l_Content);
+				$l_CriticalDetected = CheckVulnerability($l_Filename, $i, $l_Content);
 
 				//$l_Unwrapped = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
 				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
@@ -2485,28 +2483,12 @@ function QCR_ScanFile($l_Filename, $i = 0)
          					$g_SkipNextCheck = true;
          				}
 				}
-/*				
-				if (!$g_SkipNextCheck) {
-				   // critical without comments
-				   $l_NoComments = preg_replace('|/\*.*?\*\/|smi', '', $l_Unwrapped);
-				   $g_SkipNextCheckComments = (strlen($l_NoComments) == strlen($l_Unwrapped));
-				} else {
-                                   $g_SkipNextCheckComments = true;
-                                }
 
-				if ((!$g_SkipNextCheckComments) && CriticalPHP($l_Filename, $i, $l_NoComments, $l_Pos, $l_SigId))
-				{
-					$g_CriticalPHP[] = $i;
-					$g_CriticalPHPFragment[] = getFragment($l_Unwrapped, $l_Pos);
-					$g_CriticalPHPSig[] = $l_SigId;
-                                        $g_SkipNextCheck = true;
-				}			
-*/
 				$l_TypeDe = 0;
 			    if ((!$g_SkipNextCheck) && HeuristicChecker($l_Content, $l_TypeDe, $l_Filename)) {
 					$g_HeuristicDetected[] = $i;
 					$g_HeuristicType[] = $l_TypeDe;
-					$r_detected = true;
+					$l_CriticalDetected = true;
 				}
 
 				// critical JS
@@ -2547,7 +2529,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 							if  (($l_Pos !== false ) && (!knowUrl($l_Found[$kk][0]))) {
          						$g_Iframer[] = $i;
          						$g_IframerFragment[] = getFragment($l_Found[$kk][0], $l_Pos);
-         						$r_detected = true;
+         						$l_CriticalDetected = true;
 							}
 						}
 					}
@@ -2570,7 +2552,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 								if ($l_NeedToAdd && (count($g_EmptyLink) < MAX_EXT_LINKS)) {
 									$g_EmptyLink[] = $i;
 									$g_EmptyLinkSrc[$i][] = substr($l_Found[$kk][0], 0, MAX_PREVIEW_LEN);
-									$r_detected = true;
+									$l_CriticalDetected = true;
 								}
 							}
 						}
@@ -2585,7 +2567,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 					{
 						$g_PHPCodeInside[] = $i;
 						$g_PHPCodeInsideFragment[] = getFragment($l_Unwrapped, $l_Pos);
-						$r_detected = true;
+						$l_CriticalDetected = true;
 					}
 				}
 
@@ -2606,14 +2588,14 @@ function QCR_ScanFile($l_Filename, $i = 0)
 					if ($l_Pos !== false) {
 						$g_Redirect[] = $i;
 						$g_RedirectPHPFragment[] = getFragment($l_Content, $l_Pos);
-						$r_detected = true;
+						$l_CriticalDetected = true;
 					}
 					
 					$l_Pos = stripos($l_Content, 'auto_append_file');
 					if ($l_Pos !== false) {
 						$g_Redirect[] = $i;
 						$g_RedirectPHPFragment[] = getFragment($l_Content, $l_Pos);
-						$r_detected = true;
+						$l_CriticalDetected = true;
 					}
 
 					$l_Pos = stripos($l_Content, '^(%2d|-)[^=]+$');
@@ -2621,31 +2603,31 @@ function QCR_ScanFile($l_Filename, $i = 0)
 					{
 						$g_Redirect[] = $i;
                         $g_RedirectPHPFragment[] = getFragment($l_Content, $l_Pos);
-						$r_detected = true;
+						$l_CriticalDetected = true;
 					}
 
-					if (!$r_detected) {
+					if (!$l_CriticalDetected) {
 						$l_Pos = stripos($l_Content, '%{HTTP_USER_AGENT}');
 						if ($l_Pos !== false)
 						{
 							$g_Redirect[] = $i;
 							$g_RedirectPHPFragment[] = getFragment($l_Content, $l_Pos);
-							$r_detected = true;
+							$l_CriticalDetected = true;
 						}
 					}
 
-					if (!$r_detected) {
+					if (!$l_CriticalDetected) {
 						if (
 							preg_match_all('|(RewriteCond\s+%\{HTTP_HOST\}/%1 \!\^\[w\.\]\*\(\[\^/\]\+\)/\\\1\$\s+\[NC\])|smi', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)
 						   )
 						{
 							$g_Redirect[] = $i;
 							$g_RedirectPHPFragment[] = getFragment($l_Content, $l_Found[0][1]);
-							$r_detected = true;
+							$l_CriticalDetected = true;
 						}
 					}
 					
-					if (!$r_detected) {
+					if (!$l_CriticalDetected) {
 						if (
 							preg_match_all("|RewriteRule\s+.+?\s+http://(.+?)/.+\s+\[.*R=\d+.*\]|smi", $l_HTAContent, $l_Found, PREG_SET_ORDER)
 						)
@@ -2657,7 +2639,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 								if ($l_Found[$j][1] != $l_Host)
 								{
 									$g_Redirect[] = $i;
-									$r_detected = true;
+									$l_CriticalDetected = true;
 									break;
 								}
 							}
@@ -2681,7 +2663,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 					$g_WarningPHP[$l_Prio][] = $i;
 					$g_WarningPHPFragment[$l_Prio][] = getFragment($l_Content, $l_Pos);
 					$g_WarningPHPSig[] = $l_SigId;
-					$r_detected = true;
+					$l_CriticalDetected = true;
 				}
 				
 
@@ -2690,14 +2672,14 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				{
 					$g_AdwareList[] = $i;
 					$g_AdwareListFragment[] = getFragment($l_Unwrapped, $l_Pos);
-					$r_detected = true;
+					$l_CriticalDetected = true;
 				}
 
 				// articles
 				if (stripos($l_Filename, 'article_index'))
 				{
 					$g_AdwareSig[] = $i;
-					$r_detected = true;
+					$l_CriticalDetected = true;
 				}
 			}
 		} // end of if (!$g_SkipNextCheck) {
@@ -2713,7 +2695,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 			   usleep(SCAN_DELAY * 1000);
                         }
 
-			if ($g_SkipNextCheck || $r_detected) {
+			if ($g_SkipNextCheck || $l_CriticalDetected) {
 				AddResult($l_Filename, $i);
 			}
 
@@ -2722,14 +2704,14 @@ function QCR_ScanFile($l_Filename, $i = 0)
 
 function AddResult($l_Filename, $i)
 {
-	global $g_Structure, $g_crc;
+	global $g_Structure, $g_CRC;
 	
 	$l_Stat = stat($l_Filename);
 	$g_Structure['n'][$i] = $l_Filename;
 	$g_Structure['s'][$i] = $l_Stat['size'];
 	$g_Structure['c'][$i] = $l_Stat['ctime'];
 	$g_Structure['m'][$i] = $l_Stat['mtime'];
-	$g_Structure['crc'][$i] = $g_crc;
+	$g_Structure['crc'][$i] = $g_CRC;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2887,7 +2869,7 @@ if (AI_EXPERT > 1) {
 
 
 ////////////////////////////////////////////////////////////////////////////
-define('SUSP_MTIME', 1); // suspicious ctime (greater than mtime)
+define('SUSP_MTIME', 1); // suspicious mtime (greater than ctime)
 define('SUSP_PERM', 2); // suspicious permissions 
 define('SUSP_PHP_IN_UPLOAD', 3); // suspicious .php file in upload or image folder 
 
@@ -2904,18 +2886,18 @@ define('SUSP_PHP_IN_UPLOAD', 3); // suspicious .php file in upload or image fold
   ///////////////////////////////////////////////////////////////////////////
   function HeuristicChecker($l_Content, &$l_Type, $l_Filename) {
      $res = false;
-
-/*	 
+	 
 	 $l_Stat = stat($l_Filename);
 	 // most likely changed by touch
-	 if ($l_Stat['ctime'] > $l_Stat['mtime']) {
+	 if ($l_Stat['ctime'] < $l_Stat['mtime']) {
 	     $l_Type = SUSP_MTIME;
 		 return true;
 	 }
-*/
+
 	 	 
 	 $l_Perm = fileperms($l_Filename) & 0777;
 	 if (($l_Perm & 0400 != 0400) || // not readable by owner
+		($l_Perm == 0000) ||
 		($l_Perm == 0404) ||
 		($l_Perm == 0505))
 	 {
@@ -2925,7 +2907,7 @@ define('SUSP_PHP_IN_UPLOAD', 3); // suspicious .php file in upload or image fold
 
 	 
      if ((strpos($l_Filename, '.ph')) && (
-	     //strpos($l_Filename, '/image/') ||
+	     strpos($l_Filename, '/images/stories/') ||
 	     //strpos($l_Filename, '/img/') ||
 		 //strpos($l_Filename, '/images/') ||
 	     //strpos($l_Filename, '/uploads/') ||
@@ -2959,7 +2941,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 {
   global $g_ExceptFlex, $gXX_FlexDBShe, $gX_FlexDBShe, $g_FlexDBShe, $gX_DBShe, $g_DBShe, $g_Base64, $g_Base64Fragment;
 
-  // OI875GHJKJHG9876GDFS45958761JW
+  // HLKHLKJHKLHJGJG6789869869GGHJ
 
   foreach ($g_FlexDBShe as $l_Item) {
     if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
@@ -3256,14 +3238,14 @@ foreach ($g_AiBolitKnownFilesDirs as $l_PathKnownFiles)
 stdOut("Loaded " . count($g_KnownList) . ' known files');
 
 try {
-	$s_file = new SplFileObject($g_AiBolitAbsolutePath."/aibolit.sig");
+	$s_file = new SplFileObject($g_AiBolitAbsolutePath."/ai-bolit.sig");
 	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
 	foreach ($s_file as $line) {
 		$g_FlexDBShe[] = preg_replace('~\G(?:[^#\\\\]+|\\\\.)*+\K#~', '\\#', $line); // escaping #
 	}
-	stdOut("Loaded " . $s_file->key() . " signatures from aibolit.sig");
+	stdOut("Loaded " . $s_file->key() . " signatures from ai-bolit.sig");
 	$s_file = null; // file handler is closed
-} catch (Exception $e) { QCR_Debug( "Import aibolit.sig " . $e->getMessage() ); }
+} catch (Exception $e) { QCR_Debug( "Import ai-bolit.sig " . $e->getMessage() ); }
 
 QCR_Debug();
 
