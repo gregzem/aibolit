@@ -2465,7 +2465,8 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				// check vulnerability in files
 				$r_detected = CheckVulnerability($l_Filename, $i, $l_Content);
 
-				$l_Unwrapped = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
+				//$l_Unwrapped = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
+				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
 				
 				// critical
 				$g_SkipNextCheck = false;
@@ -3289,16 +3290,20 @@ if (defined('SCAN_FILE')) {
    // scan list of files from file
    if (!$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
-      $l_FHList = fopen(DOUBLECHECK_FILE, "r");
+      $s_file = new SplFileObject(DOUBLECHECK_FILE);
+      $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+      // force to seek to last line
+      $s_file->seek(PHP_INT_MAX);
+      // get number of lines
+      $g_FoundTotalFiles = $g_Counter = $s_file->key();
       $i = 0;
-      while(!feof($l_FHList)) {
-         $l_FN = trim(fgets($l_FHList));
+      foreach ($s_file as $l_FN) {
          if (file_exists($l_FN)) {
             QCR_ScanFile($l_FN, $i++); 
          }
       }
 
-      fclose($l_FHList);
+      $s_file = null;
 
    } else {
       // scan whole file system
@@ -3818,59 +3823,47 @@ QCR_Debug();
 function RemoveCommentsPHP($src) {
     
     return preg_replace('
-@
+~
 (?(DEFINE)
   (?<next_open_tag>
-    [^<]*+
-    (?i: <++[^<?s][^<]* 
-       | <++(?! \?php
-              | \?=
-              | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>
-            ) [^<]*
-    )*+
-    (?i: <++(?: \?php
-              | \?=
-              | [^>]+
-            )       
-       | \z 
-    ) 
+    (?i:
+        [^<]*+  <*+ 
+        (?: [^?s] [^<]*+ <++ )*+
+        (?: \? (?!xml\b) \K (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        )?
+    )++ \K
   )
 )
-
-
-\A (?&next_open_tag) \K
-
+\A (?&next_open_tag)
 |
-
-[^\'"`/#<?]*+
-(?: \'(?:[^\'\\\\]+|\\\\.)*+\' [^\'"`/#<?]*
-  | "(?:[^"\\\\]+|\\\\.)*+"   [^\'"`/#<?]*
-  | `(?:[^`\\\\]+|\\\\.)*+`   [^\'"`/#<?]*  
-  | /(?![/*])                 [^\'"`/#<?]* # stop for // or /*
-
+\G
+[^\'"`/#<?@\s]*+
+(?: \'(?:[^\'\\\\]+|\\\\.)*+\'
+  | "(?:[^"\\\\]+|\\\\.)*+"
+  | `(?:[^`\\\\]+|\\\\.)*+`
+  | /(?![/*])                  # stop for // or /*
   | # if close tag ?>
-    \? (?: >(?&next_open_tag)[^\'"`/#<?]* | )
-
+    \? (?: >(?&next_open_tag) | ) 
   | <  (?: # heredoc or nowdoc
            <<[\ \t]*([\'"]?)
                    ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
                    \g{-2}[\ \t]*[\r\n]
              (?-s:.*+[\r\n])*?
              \g{-1}[\r\n;]
-             [^\'"`/#<?]*
-
          | (?i: /script\s*>)
            (?&next_open_tag)
-           [^\'"`/#<?]* 
-
-         | [^\'"`/#<?]*
+         |
        )
-)*+
+  | \K
+    (?: (?://|\#)(?:[^\n?]+|\?(?!>))*+\s* # single line comment // è #
+      | /\*(?:[^*]+|\*(?!/))*+\*/\s*      # multi line comment /* */
+      | \s+
+      | @
+    ) (*ACCEPT)
+)
 \K
-(?: (?://|\#)(?:[^\n?]+|\?(?!>))*+ # single line comment // и #
-  | /\*(?:[^*]+|\*(?!/))*+\*/      # multi line comment /* */
-)?
-@xs', '', $src);
+~xs', '', $src);
 }
 
 function Quarantine()
