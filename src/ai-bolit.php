@@ -1390,6 +1390,7 @@ function printProgress($num, &$par_File)
 	global $g_CriticalPHP, $g_Base64, $g_Phishing, $g_CriticalJS, $g_Iframer;
 	$total_files = $GLOBALS['g_FoundTotalFiles'];
 	$elapsed_time = microtime(true) - START_TIME;
+	$percent = number_format($total_files ? $num*100/$total_files : 0, 1);
 	$stat = '';
 	if ($elapsed_time >= 1)
 	{
@@ -1399,13 +1400,13 @@ function printProgress($num, &$par_File)
 		if ($fs > 0) 
 		{
 		   $left_time = ($left_files / $fs); //ceil($left_files / $fs);
-		   $stat = '. [Avg: ' . round($fs,2) . ' files/s' . ($left_time > 0  ? ' Left: ' . seconds2Human($left_time) : '') . '] [Mlw:' . (count($g_CriticalPHP) + count($g_Base64))  . '|' . (count($g_CriticalJS) + count($g_Iframer) + count($g_Phishing)) . ']';
+		   $stat = ' [Avg: ' . round($fs,2) . ' files/s' . ($left_time > 0  ? ' Left: ' . seconds2Human($left_time) : '') . '] [Mlw:' . (count($g_CriticalPHP) + count($g_Base64))  . '|' . (count($g_CriticalJS) + count($g_Iframer) + count($g_Phishing)) . ']';
         }
 	}
 
 	$l_FN = substr($par_File, -60);
 
-	$text = "[$l_FN] $num of {$total_files}" . $stat;
+	$text = "[$l_FN] $num of {$total_files}. $percent%" . $stat;
 	$text = str_pad($text, 160, ' ', STR_PAD_RIGHT);
 	stdOut(str_repeat(chr(8), 160) . $text, false);
 }
