@@ -2380,10 +2380,18 @@ function QCR_GoScan($par_Offset)
     QCR_Debug('QCR_GoScan ' . $par_Offset);
 
 	$i = 0;
-	foreach (new SplFileObject(QUEUE_FILENAME)as $l_Filename) {
-		QCR_ScanFile(trim($l_Filename), $i++);
-	}
+	
+	try {
+		$s_file = new SplFileObject(QUEUE_FILENAME);
+		$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
 
+		foreach ($s_file as $l_Filename) {
+			QCR_ScanFile($l_Filename, $i++);
+		}
+		
+		unset($s_file);	
+	}
+	catch (Exception $e) { QCR_Debug( $e->getMessage() ); }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2405,10 +2413,12 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				// FOLDER
 				$g_Structure['n'][$i] = $l_Filename;
 				$g_TotalFolder++;
+				printProgress($_files_and_ignored, $l_Filename);
 				return;
 			}
 
 			QCR_Debug('Scan file ' . $l_Filename);
+			printProgress(++$_files_and_ignored, $l_Filename);
 
 			// FILE
 			if ((MAX_SIZE_TO_SCAN > 0 AND $l_Stat['size'] > MAX_SIZE_TO_SCAN) || ($l_Stat['size'] < 0))
@@ -2443,7 +2453,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 
                                 $l_KnownCRC = $g_CRC + realCRC(basename($l_Filename));
                                 if ( isset($g_KnownList[$l_KnownCRC]) ) {
-	        		   printProgress(++$_files_and_ignored, $l_Filename);
+	        		   //printProgress(++$_files_and_ignored, $l_Filename);
                                    return;
                                 }
 
@@ -2687,7 +2697,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 			unset($l_Unwrapped);
 			unset($l_Content);
 			
-			printProgress(++$_files_and_ignored, $l_Filename);
+			//printProgress(++$_files_and_ignored, $l_Filename);
 
 			$l_TSEndScan = microtime(true);
 			$l_Elapsed = $l_TSEndScan - $l_TSStartScan;
@@ -3298,7 +3308,7 @@ if (defined('SCAN_FILE')) {
 }
 
 //$g_FoundTotalFiles = count($g_Structure['n']);
-$g_FoundTotalFiles = $g_Counter;
+$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
 
 QCR_Debug();
 
