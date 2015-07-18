@@ -2458,13 +2458,14 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				   }
                                 }
 
+                                $l_Unwrapped = UnwrapObfu2($l_Unwrapped);
 				$l_Unwrapped = UnwrapObfu($l_Unwrapped);
 				
 				// check vulnerability in files
 				$l_CriticalDetected = CheckVulnerability($l_Filename, $i, $l_Content);
 
 				//$l_Unwrapped = preg_replace('|/\*.*?\*/|smi', '', $l_Unwrapped);
-				$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
+				//$l_Unwrapped = RemoveCommentsPHP($l_Unwrapped);
 				
 				// critical
 				$g_SkipNextCheck = false;
@@ -3948,4 +3949,146 @@ function Quarantine()
 
 	stdOut("\nCreate archive '" . realpath($archive) . "'.");
 	stdOut("This archive has no password!");
+}
+
+function UnwrapObfu2($par_Content) {
+	if ( !preg_match('~<(?i:\?(?!xml\b)|script\s*language\s*=\s*([\'"]?)php\1\s*>)\K~', $par_Content) )
+        return $par_Content;
+
+	$par_Content = RemoveCommentsPHP($par_Content);
+	$par_Content = escapedChr($par_Content);
+	$par_Content = BitwiseOperators($par_Content);
+	
+	return $par_Content;
+}
+
+function escapedChr($src) {
+
+    return preg_replace_callback('
+~
+(?(DEFINE)
+  (?<next_open_tag>
+    (?i:
+        [^<]*+  <*+ 
+        (?: [^?s] [^<]*+ <++ )*+
+        (?: \? (?!xml\b) \K (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        )?
+    )++ \K
+  )
+)
+\A (?&next_open_tag)
+|
+\G
+[^\'"`<?c]*+ # (?:c+[^\'"`<?ch]+)*+
+(?: \'(?:[^\'\\\\]+|\\\\.)*+\'
+  | "(?:[^"\\\\]+|\\\\.)*+"
+  | `(?:[^`\\\\]+|\\\\.)*+`
+  | # if close tag ?>
+    \? (?: >(?&next_open_tag) | ) 
+  | <  (?: # heredoc or nowdoc
+           <<[\ \t]*([\'"]?)
+                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+                   \g{-2}[\ \t]*[\r\n]
+             (?-s:.*+[\r\n])*?
+             \g{-1}[\r\n;]
+         | (?i: /script\s*>)
+           (?&next_open_tag)
+         |
+       )
+  | \K chr(?:\([0-9a-fA-FxX]+\) (*ACCEPT) | )
+)
+\K
+~xs', 
+function ($m) {
+	if (empty($m[0])) return '';
+
+	$n = substr($m[0], 4, -1);
+
+	return "'".chr(intval($n, 0))."'";
+}, $src);
+}
+
+function BitwiseOperators($src) {
+
+    return preg_replace_callback('
+~
+(?(DEFINE)
+  (?<next_open_tag>
+    (?i:
+        [^<]*+  <*+ 
+        (?: [^?s] [^<]*+ <++ )*+
+        (?: \? (?!xml\b) \K (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        )?
+    )++ \K
+  )
+)
+\A (?&next_open_tag) \K
+|
+\G
+[^\'"`<?]*+  \K
+(?:
+   (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
+     | "(?:[^"\\\\]+|\\\\.)*+"
+   )
+   (?:
+     (?: [&|^]
+         (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
+           | "(?:[^"\\\\]+|\\\\.)*+"
+         )
+     )+ (*ACCEPT)
+   )?
+
+  | `(?:[^`\\\\]+|\\\\.)*+`
+
+  | # if close tag ?>
+    \? (?: >(?&next_open_tag) | ) 
+
+  | <  (?: # heredoc or nowdoc
+           <<[\ \t]*([\'"]?)
+                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
+                   \g{-2}[\ \t]*[\r\n]
+             (?-s:.*+[\r\n])*?
+             \g{-1}[\r\n;]
+
+         | (?i: /script\s*>)
+           (?&next_open_tag)
+         |
+       )
+)
+\K
+~xs', function ($m) {
+	if (empty($m[0])) return '';
+	preg_match_all('~\'(?:[^\'\\\\]+|\\\\.)*+\'|"(?:[^"\\\\]+|\\\\.)*+"|.~', $m[0], $matches);
+	array_walk($matches[0], 'escapedStr');
+	$expr = $matches[0];
+	foreach (array('&', '^', '|') as $v) {
+		$count = count($expr);
+		for ($i = 1; $i < $count; $i+=2 ) {
+			if ($expr[$i] != $v) continue;
+			switch ($expr[$i]) {
+				case '&': $expr[$i+1] &= $expr[$i-1]; break;
+				case '^': $expr[$i+1] ^= $expr[$i-1]; break;
+				case '|': $expr[$i+1] |= $expr[$i-1]; break;
+			}
+			unset($expr[$i], $expr[$i-1]);
+		}
+		$expr = array_values($expr);
+	}
+	return "'". $expr[0] .  "'";
+}, $src);
+}
+
+function escapedStr(&$str) {
+
+	if ($str[0] == "'") {
+		$str = strtr($str, array('\\\\'=>'\\', '\\\''=> '\''));
+		$str = substr($str, 1, -1);
+	}
+	if ($str[0] == '"') {
+		$str = preg_replace_callback('/\\\\x([a-fA-F0-9]{1,2})/','escapedHexToHex', $str);
+		$str = preg_replace_callback('/\\\\([0-7]{1,3})/','escapedOctDec', $str);
+		$str = substr($str, 1, -1);
+	}
 }
