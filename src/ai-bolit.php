@@ -3805,29 +3805,31 @@ QCR_Debug();
 
 function RemoveCommentsPHP($src) {
     
-    return preg_replace('
+    return preg_replace_callback('
 ~
 (?(DEFINE)
   (?<next_open_tag>
     (?i:
         [^<]*+  <*+ 
         (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b) \K (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        (?: \? (?!xml\b)  (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>  (*ACCEPT)
         )?
-    )++ \K
+    )++
   )
 )
 \A (?&next_open_tag)
 |
 \G
 [^\'"`/#<?@\s]*+
+\K
 (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
   | "(?:[^"\\\\]+|\\\\.)*+"
   | `(?:[^`\\\\]+|\\\\.)*+`
   | /(?![/*])                  # stop for // or /*
   | # if close tag ?>
     \? (?: >(?&next_open_tag) | ) 
+
   | <  (?: # heredoc or nowdoc
            <<[\ \t]*([\'"]?)
                    ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
@@ -3838,15 +3840,15 @@ function RemoveCommentsPHP($src) {
            (?&next_open_tag)
          |
        )
+ 
   | \K
-    (?: (?://|\#)(?:[^\n?]+|\?(?!>))*+\s* # single line comment // è #
+    (?<cut> (?://|\#)(?:[^\n?]+|\?(?!>))*+\s* # single line comment // è #
       | /\*(?:[^*]+|\*(?!/))*+\*/\s*      # multi line comment /* */
       | \s+
       | @
     ) (*ACCEPT)
 )
-\K
-~xs', '', $src);
+~xs', function ($m) { if (isset($m['cut'])) return ''; return $m[0]; }, $src);
 }
 
 function Quarantine()
@@ -3971,10 +3973,10 @@ function escapedChr($src) {
     (?i:
         [^<]*+  <*+ 
         (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b) \K (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        (?: \? (?!xml\b)  (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> (*ACCEPT)
         )?
-    )++ \K
+    )++ 
   )
 )
 \A (?&next_open_tag)
@@ -3996,12 +3998,11 @@ function escapedChr($src) {
            (?&next_open_tag)
          |
        )
-  | \K chr(?:\([0-9a-fA-FxX]+\) (*ACCEPT) | )
+  | \K c(?<f>hr\([0-9a-fA-FxX]+\) (*ACCEPT) | )
 )
-\K
 ~xs', 
 function ($m) {
-	if (empty($m[0])) return '';
+	if ( !isset($m['f'][0] )) return $m[0];
 
 	$n = substr($m[0], 4, -1);
 
@@ -4018,13 +4019,13 @@ function BitwiseOperators($src) {
     (?i:
         [^<]*+  <*+ 
         (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b) \K (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> \K (*ACCEPT)
+        (?: \? (?!xml\b)  (*ACCEPT)
+          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>  (*ACCEPT)
         )?
-    )++ \K
+    )++ 
   )
 )
-\A (?&next_open_tag) \K
+\A (?&next_open_tag)  
 |
 \G
 [^\'"`<?]*+  \K
@@ -4032,7 +4033,7 @@ function BitwiseOperators($src) {
    (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
      | "(?:[^"\\\\]+|\\\\.)*+"
    )
-   (?:
+   (?<op>
      (?: [&|^]
          (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
            | "(?:[^"\\\\]+|\\\\.)*+"
@@ -4057,9 +4058,8 @@ function BitwiseOperators($src) {
          |
        )
 )
-\K
 ~xs', function ($m) {
-	if (empty($m[0])) return '';
+	if (!isset($m['op'])) return $m[0];
 	preg_match_all('~\'(?:[^\'\\\\]+|\\\\.)*+\'|"(?:[^"\\\\]+|\\\\.)*+"|.~', $m[0], $matches);
 	array_walk($matches[0], 'escapedStr');
 	$expr = $matches[0];
