@@ -2190,6 +2190,13 @@ if (!defined('T_ML_COMMENT')) {
 
 function UnwrapObfu($par_Content) {
   $GLOBALS['g_EncObfu'] = 0;
+  
+  $search  = array( ' ;', ' =', ' ,', ' .', ' (', ' )', ' {', ' }', '; ', '= ', ', ', '. ', '( ', '( ', '{ ', '} ');
+  $replace = array(  ';',  '=',  ',',  '.',  '(',  ')',  '{',  '}', ';',  '=',  ',',  '.',  '(',  ')',  '{',  '}');
+  $par_Content = str_replace('@', '', $par_Content);
+  $par_Content = preg_replace('~\s+~', ' ', $par_Content);
+  $par_Content = str_replace($search, $replace, $par_Content);
+  $par_Content = preg_replace_callback('~\bchr\(\s*([0-9a-fA-FxX]+)\s*\)~', function ($m) { return "'".chr(intval($m[1], 0))."'"; }, $par_Content );
 
   $par_Content = preg_replace_callback('/\\\\x([a-fA-F0-9]{1,2})/i','escapedHexToHex', $par_Content);
   $par_Content = preg_replace_callback('/\\\\([0-9]{1,3})/i','escapedOctDec', $par_Content);
@@ -2433,6 +2440,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
 
 			$l_TSStartScan = microtime(true);
                 $l_Content = @file_get_contents($l_Filename);
+                $l_Unwrapped = @php_strip_whitespace($l_Filename);
                 if (($l_Content == '') && ($l_Stat['size'] > 0)) {
                    $g_NotRead[] = $i;
                    AddResult($l_Filename, $i);
@@ -2459,7 +2467,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
                                 }
 
 				$l_UnicodeContent = detect_utf_encoding($l_Content);
-				$l_Unwrapped = $l_Content;
+				//$l_Unwrapped = $l_Content;
 				if ($l_UnicodeContent !== false) {
        				   if (function_exists('mb_convert_encoding')) {
                                       $l_Unwrapped = mb_convert_encoding($l_Unwrapped, "CP1251");
@@ -2469,7 +2477,6 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				   }
                                 }
 
-                                $l_Unwrapped = UnwrapObfu2($l_Unwrapped);
 				$l_Unwrapped = UnwrapObfu($l_Unwrapped);
 				
 				// check vulnerability in files
@@ -3814,54 +3821,6 @@ if (isset($options['cmd'])) {
 QCR_Debug();
 
 
-function RemoveCommentsPHP($src) {
-    
-    return preg_replace_callback('
-~
-(?(DEFINE)
-  (?<next_open_tag>
-    (?i:
-        [^<]*+  <*+ 
-        (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b)  (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>  (*ACCEPT)
-        )?
-    )++
-  )
-)
-\A (?&next_open_tag)
-|
-\G
-[^\'"`/#<?@\s]*+
-\K
-(?: \'(?:[^\'\\\\]+|\\\\.)*+\'
-  | "(?:[^"\\\\]+|\\\\.)*+"
-  | `(?:[^`\\\\]+|\\\\.)*+`
-  | /(?![/*])                  # stop for // or /*
-  | # if close tag ?>
-    \? (?: >(?&next_open_tag) | ) 
-
-  | <  (?: # heredoc or nowdoc
-           <<[\ \t]*([\'"]?)
-                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-                   \g{-2}[\ \t]*[\r\n]
-             (?-s:.*+[\r\n])*?
-             \g{-1}[\r\n;]
-         | (?i: /script\s*>)
-           (?&next_open_tag)
-         |
-       )
- 
-  | \K
-    (?<cut> (?://|\#)(?:[^\n?]+|\?(?!>))*+\s* # single line comment // è #
-      | /\*(?:[^*]+|\*(?!/))*+\*/\s*      # multi line comment /* */
-      | \s+
-      | @
-    ) (*ACCEPT)
-)
-~xs', function ($m) { if (isset($m['cut'])) return ''; return $m[0]; }, $src);
-}
-
 function Quarantine()
 {
 	if (!file_exists(DOUBLECHECK_FILE)) {
@@ -3962,144 +3921,4 @@ function Quarantine()
 
 	stdOut("\nCreate archive '" . realpath($archive) . "'.");
 	stdOut("This archive has no password!");
-}
-
-function UnwrapObfu2($par_Content) {
-	if ( !preg_match('~<(?i:\?(?!xml\b)|script\s*language\s*=\s*([\'"]?)php\1\s*>)\K~', $par_Content) )
-        return $par_Content;
-
-	$par_Content = RemoveCommentsPHP($par_Content);
-	$par_Content = escapedChr($par_Content);
-	$par_Content = BitwiseOperators($par_Content);
-	
-	return $par_Content;
-}
-
-function escapedChr($src) {
-
-    return preg_replace_callback('
-~
-(?(DEFINE)
-  (?<next_open_tag>
-    (?i:
-        [^<]*+  <*+ 
-        (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b)  (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*> (*ACCEPT)
-        )?
-    )++ 
-  )
-)
-\A (?&next_open_tag)
-|
-\G
-[^\'"`<?c]*+ # (?:c+[^\'"`<?ch]+)*+
-(?: \'(?:[^\'\\\\]+|\\\\.)*+\'
-  | "(?:[^"\\\\]+|\\\\.)*+"
-  | `(?:[^`\\\\]+|\\\\.)*+`
-  | # if close tag ?>
-    \? (?: >(?&next_open_tag) | ) 
-  | <  (?: # heredoc or nowdoc
-           <<[\ \t]*([\'"]?)
-                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-                   \g{-2}[\ \t]*[\r\n]
-             (?-s:.*+[\r\n])*?
-             \g{-1}[\r\n;]
-         | (?i: /script\s*>)
-           (?&next_open_tag)
-         |
-       )
-  | \K c(?<f>hr\([0-9a-fA-FxX]+\) (*ACCEPT) | )
-)
-~xs', 
-function ($m) {
-	if ( !isset($m['f'][0] )) return $m[0];
-
-	$n = substr($m[0], 4, -1);
-
-	return "'".chr(intval($n, 0))."'";
-}, $src);
-}
-
-function BitwiseOperators($src) {
-
-    return preg_replace_callback('
-~
-(?(DEFINE)
-  (?<next_open_tag>
-    (?i:
-        [^<]*+  <*+ 
-        (?: [^?s] [^<]*+ <++ )*+
-        (?: \? (?!xml\b)  (*ACCEPT)
-          | script\s+language\s*=\s*([\'"]?)php\g{-1}\s*>  (*ACCEPT)
-        )?
-    )++ 
-  )
-)
-\A (?&next_open_tag)  
-|
-\G
-[^\'"`<?]*+  \K
-(?:
-   (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
-     | "(?:[^"\\\\]+|\\\\.)*+"
-   )
-   (?<op>
-     (?: [&|^]
-         (?: \'(?:[^\'\\\\]+|\\\\.)*+\'
-           | "(?:[^"\\\\]+|\\\\.)*+"
-         )
-     )+ (*ACCEPT)
-   )?
-
-  | `(?:[^`\\\\]+|\\\\.)*+`
-
-  | # if close tag ?>
-    \? (?: >(?&next_open_tag) | ) 
-
-  | <  (?: # heredoc or nowdoc
-           <<[\ \t]*([\'"]?)
-                   ([a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*)
-                   \g{-2}[\ \t]*[\r\n]
-             (?-s:.*+[\r\n])*?
-             \g{-1}[\r\n;]
-
-         | (?i: /script\s*>)
-           (?&next_open_tag)
-         |
-       )
-)
-~xs', function ($m) {
-	if (!isset($m['op'])) return $m[0];
-	preg_match_all('~\'(?:[^\'\\\\]+|\\\\.)*+\'|"(?:[^"\\\\]+|\\\\.)*+"|.~', $m[0], $matches);
-	array_walk($matches[0], 'escapedStr');
-	$expr = $matches[0];
-	foreach (array('&', '^', '|') as $v) {
-		$count = count($expr);
-		for ($i = 1; $i < $count; $i+=2 ) {
-			if ($expr[$i] != $v) continue;
-			switch ($expr[$i]) {
-				case '&': $expr[$i+1] &= $expr[$i-1]; break;
-				case '^': $expr[$i+1] ^= $expr[$i-1]; break;
-				case '|': $expr[$i+1] |= $expr[$i-1]; break;
-			}
-			unset($expr[$i], $expr[$i-1]);
-		}
-		$expr = array_values($expr);
-	}
-	return "'". $expr[0] .  "'";
-}, $src);
-}
-
-function escapedStr(&$str) {
-
-	if ($str[0] == "'") {
-		$str = strtr($str, array('\\\\'=>'\\', '\\\''=> '\''));
-		$str = substr($str, 1, -1);
-	}
-	if ($str[0] == '"') {
-		$str = preg_replace_callback('/\\\\x([a-fA-F0-9]{1,2})/','escapedHexToHex', $str);
-		$str = preg_replace_callback('/\\\\([0-7]{1,3})/','escapedOctDec', $str);
-		$str = substr($str, 1, -1);
-	}
 }
