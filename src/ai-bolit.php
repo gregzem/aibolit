@@ -65,6 +65,7 @@ define('DIR_SEPARATOR', '/');
 
 define('DOUBLECHECK_FILE', 'AI-BOLIT-DOUBLECHECK.php');
 define('QUEUE_FILENAME', 'AI-BOLIT-QUEUE.txt');
+define('INTEGRITY_DB_FILE', 'AI-INTEGRITY-DB.php');
 
 if ((isset($_SERVER['OS']) && stripos('Win', $_SERVER['OS']) !== false)/* && stripos('CygWin', $_SERVER['OS']) === false)*/) {
    define('DIR_SEPARATOR', '\\');
@@ -164,6 +165,11 @@ define('AI_STR_078', "Подозрительные атрибуты файла")
 define('AI_STR_079', "Подозрительное местоположение файла");
 define('AI_STR_080', "Обращаем внимание, что обнаруженные файлы не всегда являются вирусами и хакерскими скриптами. Сканер старается минимизировать число ложных обнаружений, но это не всегда возможно, так как найденный фрагмент может встречаться как во вредоносных скриптах, так и в обычных.");
 define('AI_STR_081', "Уязвимости в скриптах");
+define('AI_STR_082', "Добавленные файлы");
+define('AI_STR_083', "Измененные файлы");
+define('AI_STR_084', "Удаленные файлы");
+define('AI_STR_085', "Добавленные каталоги");
+define('AI_STR_086', "Удаленные каталоги");
 
 $l_Offer =<<<OFFER
     <div>
@@ -271,7 +277,11 @@ define('AI_STR_077', "Suspicious file mtime and ctime");
 define('AI_STR_078', "Suspicious file permissions");
 define('AI_STR_079', "Suspicious file location");
 define('AI_STR_081', "Vulnerable Scripts");
-
+define('AI_STR_082', "Added files");
+define('AI_STR_083', "Modified files");
+define('AI_STR_084', "Deleted files");
+define('AI_STR_085', "Added directories");
+define('AI_STR_086', "Deleted directories");
 
 $l_Offer =<<<HTML_OFFER_EN
 <div>
@@ -1462,7 +1472,9 @@ if (isCli())
 	$cli_longopts = array(
 		'cmd:',
 		'one-pass',
-		'quarantine'
+		'quarantine',
+		'imake',
+		'icheck'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1497,6 +1509,8 @@ Current default path is: {$defaults['path']}
                        Run command after scanning
       --one-pass       Do not calculate remaining time
       --quarantine     Archive all malware from report
+      --imake
+      --icheck
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -1634,7 +1648,12 @@ HELP;
 	}
 
 	define('ONE_PASS', isset($options['one-pass']));
-    
+
+	define('IMAKE', isset($options['imake']));
+	define('ICHECK', isset($options['icheck']));
+
+	if (IMAKE && ICHECK) die('One of the following options must be used --imake or --icheck.');
+
 } else {
    define('AI_EXPERT', AI_EXPERT_MODE); 
    define('ONE_PASS', true);
@@ -3289,7 +3308,7 @@ if (defined('SCAN_FILE')) {
    }
 } else {
    // scan list of files from file
-   if (!$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
+   if (!(ICHECK || IMAKE) && !$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
       $s_file = new SplFileObject(DOUBLECHECK_FILE);
       $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
@@ -3297,6 +3316,8 @@ if (defined('SCAN_FILE')) {
       $s_file->seek(PHP_INT_MAX);
       // get number of lines
       $g_FoundTotalFiles = $g_Counter = $s_file->key();
+      stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+      stdOut(str_repeat(' ', 160),false);
       $i = 0;
       foreach ($s_file as $l_FN) {
          if (file_exists($l_FN)) {
@@ -3311,18 +3332,45 @@ if (defined('SCAN_FILE')) {
       stdOut("Start scanning '" . ROOT_PATH . "'.");
       
       file_exists(QUEUE_FILENAME) && unlink(QUEUE_FILENAME);
+      if (ICHECK || IMAKE) {
+      // INTEGRITY CHECK
+        IMAKE and unlink(INTEGRITY_DB_FILE);
+        ICHECK and load_integrity_db();
+        QCR_IntegrityCheck(ROOT_PATH);
+        stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+        if (ICHECK) {
+            $i = $g_Counter;
+            $g_CRC = 0;
+            $changes = array();
+            foreach ($g_IntegrityDB as $l_FileName => $type) {
+                $type = in_array($type, array('added', 'modified')) ? $type : 'deleted';
+                $type .= substr($l_FileName, -1) == '/' ? 'Dirs' : 'Files';
+                $changes[$type][] = ++$i;
+                AddResult($l_FileName, $i);
+            }
+            $g_FoundTotalFiles = count($changes['addedFiles']) + count($changes['modifiedFiles']);
+            stdOut("Found changes " . count($changes['modifiedFiles']) . " files and added " . count($changes['addedFiles']) . " files.");
+        }
+        
+      } else {
       QCR_ScanDirectories(ROOT_PATH);
+      stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+      }
 
+      QCR_Debug();
+      stdOut('');
+      QCR_GoScan(0);
+      unlink(QUEUE_FILENAME);
    }
 }
 
 //$g_FoundTotalFiles = count($g_Structure['n']);
-$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
+//$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
 
 QCR_Debug();
 
-stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
-stdOut(str_repeat(' ', 160),false);
+//stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+//stdOut(str_repeat(' ', 160),false);
 
 //$g_FoundTotalFiles = count($g_Structure['n']);
 
@@ -3333,10 +3381,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || file_exists(DOUBLECHECK_FILE))) {
-QCR_GoScan(0);
-unlink(QUEUE_FILENAME);
-}
+
 QCR_Debug();
 
 
@@ -3362,6 +3407,7 @@ stdOut("\nBuilding report [ mode = " . AI_EXPERT . " ]\n");
 
 ////////////////////////////////////////////////////////////////////////////
 // save 
+if (!(ICHECK || IMAKE))
 if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base64) > 0) OR 
    (count($g_Iframer) > 0) OR  (count($g_UnixExec))) 
 {
@@ -3722,6 +3768,44 @@ if (count($g_SkippedFolders) > 0) {
       $l_Result .= "</div>";
  }
 
+
+if (ICHECK) {
+    stdOut("Building list of added files " . count($changes['addedFiles']));
+    if (count($changes['addedFiles']) > 0) {
+      $l_Result .= '<div class="note_vir">' . AI_STR_082 . ' (' . count($changes['addedFiles']) . ')</div><div class="crit">';
+      $l_Result .= printList($changes['addedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of modified files " . count($changes['modifiedFiles']));
+    if (count($changes['modifiedFiles']) > 0) {
+      $l_Result .= '<div class="note_vir">' . AI_STR_083 . ' (' . count($changes['modifiedFiles']) . ')</div><div class="crit">';
+      $l_Result .= printList($changes['modifiedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of deleted files " . count($changes['deletedFiles']));
+    if (count($changes['deletedFiles']) > 0) {
+      $l_Result .= '<div class="note_vir">' . AI_STR_084 . ' (' . count($changes['deletedFiles']) . ')</div><div class="crit">';
+      $l_Result .= printList($changes['deletedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of added dirs " . count($changes['addedDirs']));
+    if (count($changes['addedDirs']) > 0) {
+      $l_Result .= '<div class="note_vir">' . AI_STR_085 . ' (' . count($changes['addedDirs']) . ')</div><div class="crit">';
+      $l_Result .= printList($changes['addedDirs']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of deleted dirs " . count($changes['deletedDirs']));
+    if (count($changes['deletedDirs']) > 0) {
+      $l_Result .= '<div class="note_vir">' . AI_STR_086 . ' (' . count($changes['deletedDirs']) . ')</div><div class="crit">';
+      $l_Result .= printList($changes['deletedDirs']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+}
+
 if (!isCli()) {
    $l_Result .= QCR_ExtractInfo($l_PhpInfoBody[1]);
 }
@@ -3921,4 +4005,232 @@ function Quarantine()
 
 	stdOut("\nCreate archive '" . realpath($archive) . "'.");
 	stdOut("This archive has no password!");
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+function QCR_IntegrityCheck($l_RootDir)
+{
+	global $g_Structure, $g_Counter, $g_Doorway, $g_FoundTotalFiles, $g_FoundTotalDirs, 
+			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
+                        $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec, $g_IgnoredExt;
+	global $g_IntegrityDB, $g_ICheck;
+	static $l_Buffer = '';
+	
+	$l_DirCounter = 0;
+	$l_DoorwayFilesCounter = 0;
+	$l_SourceDirIndex = $g_Counter - 1;
+	
+	QCR_Debug('Scan ' . $l_RootDir);
+
+ 	if ($l_DIRH = @opendir($l_RootDir))
+	{
+		while (($l_FileName = readdir($l_DIRH)) !== false)
+		{
+			if ($l_FileName == '.' || $l_FileName == '..') continue;
+
+			$l_FileName = $l_RootDir . DIR_SEPARATOR . $l_FileName;
+
+			if (is_link($l_FileName)) 
+			{
+				$g_SymLinks[] = $l_FileName;
+				continue;
+			}
+
+			
+			$l_Ext = substr($l_FileName, strrpos($l_FileName, '.') + 1);
+			$l_IsDir = is_dir($l_FileName);
+
+			
+			if (in_array($l_Ext, array('o', 'so', 'pl', 'cgi', 'py', 'sh', 'phtml', 'php3', 'php4', 'php5', 'shtml'))) 
+			{
+				$g_UnixExec[] = $l_FileName;
+			}
+
+
+			// which files should be scanned
+			$l_NeedToScan = SCAN_ALL_FILES || (in_array($l_Ext, array(
+				'js', 'php', 'php3', 'phtml', 'shtml', 'khtml',
+				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
+			)));
+			
+			if (in_array($l_Ext, $g_IgnoredExt)) {
+                           $l_NeedToScan = false;
+                        }
+			if (getRelativePath($l_FileName) == "./" . INTEGRITY_DB_FILE) $l_NeedToScan = false;
+
+			if ($l_IsDir)
+			{
+				// if folder in ignore list
+				$l_Skip = false;
+				for ($dr = 0; $dr < count($g_DirIgnoreList); $dr++) {
+					if (($g_DirIgnoreList[$dr] != '') &&
+						preg_match('#' . $g_DirIgnoreList[$dr] . '#', $l_FileName, $l_Found)) {
+						$l_Skip = true;
+					}
+				}
+			
+				// skip on ignore
+				if ($l_Skip) {
+					$g_SkippedFolders[] = $l_FileName;
+					continue;
+				}
+				
+				
+				$l_BaseName = basename($l_FileName);
+
+				if ((strpos($l_BaseName, '.') === 0) && ($l_BaseName != '.htaccess')) {
+					$g_HiddenFiles[] = $l_FileName;
+				}
+
+				$l_DirCounter++;
+
+				if ($l_DirCounter > MAX_ALLOWED_PHP_HTML_IN_DIR)
+				{
+					$g_Doorway[] = $l_SourceDirIndex;
+					$l_DirCounter = -655360;
+				}
+
+				$g_Counter++;
+				$g_FoundTotalDirs++;
+
+				QCR_IntegrityCheck($l_FileName);
+
+			} else
+			{
+				if ($l_NeedToScan)
+				{
+					$g_FoundTotalFiles++;
+					if (in_array($l_Ext, array(
+						'php', 'php3',
+						'php4', 'php5', 'html', 'htm', 'phtml', 'shtml', 'khtml'
+					))
+					)
+					{
+						$l_DoorwayFilesCounter++;
+						
+						if ($l_DoorwayFilesCounter > MAX_ALLOWED_PHP_HTML_IN_DIR)
+						{
+							$g_Doorway[] = $l_SourceDirIndex;
+							$l_DoorwayFilesCounter = -655360;
+						}
+					}
+					
+					$g_Counter++;
+				}
+			}
+			
+			if (!$l_NeedToScan) continue;
+
+			if (IMAKE) {
+				write_integrity_db_file($l_FileName);
+				continue;
+			}
+
+			// ICHECK
+			// skip if known and not modified.
+			if (icheck($l_FileName)) continue;
+			
+			$l_Buffer .= getRelativePath($l_FileName);
+			$l_Buffer .= $l_IsDir ? DIR_SEPARATOR . "\n" : "\n";
+
+			if (strlen($l_Buffer) > 32000)
+			{
+				file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+				$l_Buffer = '';
+			}
+
+		}
+
+		closedir($l_DIRH);
+	}
+	
+	if (($l_RootDir == ROOT_PATH) && !empty($l_Buffer)) {
+		file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+		$l_Buffer = '';
+	}
+
+	if (($l_RootDir == ROOT_PATH)) {
+		write_integrity_db_file();
+	}
+
+}
+
+
+function getRelativePath($l_FileName) {
+	return "./" . substr($l_FileName, strlen(ROOT_PATH) + 1) . (is_dir($l_FileName) ? DIR_SEPARATOR : '');
+}
+/**
+ *
+ * @return true if known and not modified
+ */
+function icheck($l_FileName) {
+	global $g_IntegrityDB, $g_ICheck;
+	static $l_Buffer = '';
+	static $l_status = array( 'modified' => 'modified', 'added' => 'added' );
+    
+	$l_RelativePath = getRelativePath($l_FileName);
+	$l_known = isset($g_IntegrityDB[$l_RelativePath]);
+
+	if (is_dir($l_FileName)) {
+		if ( $l_known ) {
+			unset($g_IntegrityDB[$l_RelativePath]);
+		} else {
+			$g_IntegrityDB[$l_RelativePath] =& $l_status['added'];
+		}
+		return $l_known;
+	}
+
+	if ($l_known == false) {
+		$g_IntegrityDB[$l_RelativePath] =& $l_status['added'];
+		return false;
+	}
+
+	$hash = hash_file('sha256', $l_FileName);
+	
+	if ($g_IntegrityDB[$l_RelativePath] != $hash) {
+		$g_IntegrityDB[$l_RelativePath] =& $l_status['modified'];
+		return false;
+	}
+
+	unset($g_IntegrityDB[$l_RelativePath]);
+	return true;
+}
+
+function write_integrity_db_file($l_FileName = '') {
+	static $l_Buffer = '';
+
+	if (empty($l_FileName)) {
+		empty($l_Buffer) or file_put_contents(INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
+		$l_Buffer = '';
+		return;
+	}
+
+	$l_RelativePath = getRelativePath($l_FileName);
+		
+	$hash = is_dir($l_FileName) ? '' : hash_file('sha256', $l_FileName);
+
+	$l_Buffer .= "$l_RelativePath|$hash\n";
+	
+	if (strlen($l_Buffer) > 32000)
+	{
+		file_put_contents(INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
+		$l_Buffer = '';
+	}
+}
+
+function load_integrity_db() {
+	global $g_IntegrityDB;
+	file_exists(INTEGRITY_DB_FILE) or die('Not found ' . INTEGRITY_DB_FILE);
+
+	$s_file = new SplFileObject(INTEGRITY_DB_FILE);
+	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+
+	foreach ($s_file as $line) {
+		$i = strrpos($line, '|');
+		if (!$i) continue;
+		$g_IntegrityDB[substr($line, 0, $i)] = substr($line, $i+1);
+	}
+
+	$s_file = null;
 }
