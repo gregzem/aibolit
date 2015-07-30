@@ -3358,7 +3358,7 @@ if (defined('SCAN_FILE')) {
       }
 
       QCR_Debug();
-      stdOut('');
+      stdOut(str_repeat(' ', 160),false);
       QCR_GoScan(0);
       unlink(QUEUE_FILENAME);
    }
