@@ -2196,6 +2196,7 @@ if (!defined('T_ML_COMMENT')) {
 function UnwrapObfu($par_Content) {
   $GLOBALS['g_EncObfu'] = 0;
   
+  $par_Content = BitwiseOperators($par_Content);
   $search  = array( ' ;', ' =', ' ,', ' .', ' (', ' )', ' {', ' }', '; ', '= ', ', ', '. ', '( ', '( ', '{ ', '} ');
   $replace = array(  ';',  '=',  ',',  '.',  '(',  ')',  '{',  '}', ';',  '=',  ',',  '.',  '(',  ')',  '{',  '}');
   $par_Content = str_replace('@', '', $par_Content);
@@ -3918,4 +3919,54 @@ function Quarantine()
 
 	stdOut("\nCreate archive '" . realpath($archive) . "'.");
 	stdOut("This archive has no password!");
+}
+
+
+function BitwiseOperators($src) {
+
+    return preg_replace_callback('
+~
+   (?: \'[^\']++\'
+     | "[^"]++"
+   ) \s*
+   (?<op>
+     (?> [&|^]\s*
+         (?: \'[^\']++\'
+           | "[^"]++"
+         ) \s*
+     ){1,100}
+   )?
+~xs', function ($m) {
+	if (!isset($m['op'])) return $m[0];
+	preg_match_all('~\'[^\']++\'|"[^"]++"|\s*.\s*~', $m[0], $matches);
+	array_walk($matches[0], 'escapedStr');
+	$expr = $matches[0];
+	foreach (array('&', '^', '|') as $v) {
+		$count = count($expr);
+		for ($i = 1; $i < $count; $i+=2 ) {
+			if ($expr[$i] != $v) continue;
+			switch ($expr[$i]) {
+				case '&': $expr[$i+1] &= $expr[$i-1]; break;
+				case '^': $expr[$i+1] ^= $expr[$i-1]; break;
+				case '|': $expr[$i+1] |= $expr[$i-1]; break;
+			}
+			unset($expr[$i], $expr[$i-1]);
+		}
+		$expr = array_values($expr);
+	}
+	return "'". $expr[0] .  "'";
+}, $src);
+}
+
+function escapedStr(&$str) {
+	$str = trim($str);
+	if ($str[0] == "'") {
+		$str = strtr($str, array('\\\\'=>'\\', '\\\''=> '\''));
+		$str = substr($str, 1, -1);
+	}
+	if ($str[0] == '"') {
+		$str = preg_replace_callback('/\\\\x([a-fA-F0-9]{1,2})/','escapedHexToHex', $str);
+		$str = preg_replace_callback('/\\\\([0-7]{1,3})/','escapedOctDec', $str);
+		$str = substr($str, 1, -1);
+	}
 }
