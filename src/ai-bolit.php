@@ -836,7 +836,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150803');
+define('AI_VERSION', '20150804');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2172,7 +2172,7 @@ function getFragment($par_Content, $par_Pos) {
            '__AI_MARKER__' . 
            substr($par_Content, $par_Pos, $l_RightPos - $par_Pos - 1);
 
-  $l_Res = htmlentities(UnwrapObfu($l_Res), ENT_SUBSTITUTE);
+  $l_Res = htmlspecialchars(UnwrapObfu($l_Res), ENT_COMPAT|ENT_IGNORE);
   $l_Res = str_replace('~', '·', $l_Res);
 
   return $l_Res;
