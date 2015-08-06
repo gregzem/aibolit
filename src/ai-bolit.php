@@ -3370,34 +3370,15 @@ if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base6
 
          $l_CurrPath = dirname(__FILE__);
 
-         for ($i = 0; $i < count($g_CriticalPHP); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalPHP[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalPHP[$i]]));  
-         }
+         $tmpIndex = array_merge($g_CriticalPHP, $g_Base64, $g_CriticalJS, $g_Iframer, $g_Phishing);
+         $tmpIndex = array_values(array_unique($tmpIndex));
 
-         for ($i = 0; $i < count($g_Base64); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Base64[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Base64[$i]]));
-         }
-
-         for ($i = 0; $i < count($g_CriticalJS); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalJS[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalJS[$i]]));
-         }
-
-         for ($i = 0; $i < count($g_Iframer); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Iframer[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Iframer[$i]]));
+         for ($i = 0; $i < count($tmpIndex); $i++) {
+             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$tmpIndex[$i]]) . "\n");
          }
 
          for ($i = 0; $i < count($g_UnixExec); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_UnixExec[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_UnixExec[$i]));
-         }
-
-         for ($i = 0; $i < count($g_Phishing); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Phishing[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Phishing[$i]));
+             fputs($l_FH, str_replace($l_CurrPath, '.', $g_UnixExec[$i]) . "\n");
          }
 
          fclose($l_FH);
