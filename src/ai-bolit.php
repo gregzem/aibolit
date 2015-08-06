@@ -2057,7 +2057,8 @@ function QCR_ScanDirectories($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
-			if (in_array($l_Ext, $g_IgnoredExt)) {
+			$l_Ext2 = substr(strstr($l_FileName, '.'), 1);
+			if (in_array($l_Ext2, $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
 
