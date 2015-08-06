@@ -3895,7 +3895,7 @@ function Quarantine()
 		exec("cat AI-BOLIT-DOUBLECHECK.php|zip -@ --password $g_QuarantinePass $archive", $output, $code);
 		if ($code == 0) {
 			file_put_contents($infoFile, $info);
-			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report");
+			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report " . DOUBLECHECK_FILE);
 			stdOut("\nCreate archive '" . realpath($archive) . "'");
 			stdOut("This archive have password '$g_QuarantinePass'");
 			unlink($infoFile);
@@ -3913,6 +3913,7 @@ function Quarantine()
 	foreach ($files as $file) {
 		$zip->addFile($file);
 	}
+	$zip->addFile(DOUBLECHECK_FILE, DOUBLECHECK_FILE);
 	$zip->addFile($report, REPORT_FILE);
 	$zip->addFromString($infoFile, $info);
 	$zip->close();
