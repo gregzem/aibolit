@@ -836,7 +836,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150804');
+define('AI_VERSION', '20150806');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2057,7 +2057,7 @@ function QCR_ScanDirectories($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
-			if (in_array($l_Ext, $g_IgnoredExt)) {
+			if (in_array(strtolower($l_Ext), $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
 
@@ -2439,8 +2439,12 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				$g_TotalFiles++;
 
 			$l_TSStartScan = microtime(true);
-                $l_Content = @file_get_contents($l_Filename);
-                $l_Unwrapped = @php_strip_whitespace($l_Filename);
+
+		if (filetype($l_Filename) == 'file') {
+                   $l_Content = @file_get_contents($l_Filename);
+                   $l_Unwrapped = @php_strip_whitespace($l_Filename);
+                }
+
                 if (($l_Content == '') && ($l_Stat['size'] > 0)) {
                    $g_NotRead[] = $i;
                    AddResult($l_Filename, $i);
@@ -3265,7 +3269,7 @@ try {
 
 QCR_Debug();
 
-	$defaults['skip_ext'] = trim($defaults['skip_ext']);
+	$defaults['skip_ext'] = strtolower(trim($defaults['skip_ext']));
          if ($defaults['skip_ext'] != '') {
 	    $g_IgnoredExt = explode(',', $defaults['skip_ext']);
 	    for ($i = 0; $i < count($g_IgnoredExt); $i++) {
