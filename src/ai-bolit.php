@@ -3374,11 +3374,17 @@ if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base6
          $tmpIndex = array_values(array_unique($tmpIndex));
 
          for ($i = 0; $i < count($tmpIndex); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$tmpIndex[$i]]) . "\n");
+             $tmpIndex[$i] = str_replace($l_CurrPath, '.', $g_Structure['n'][$tmpIndex[$i]]);
          }
 
          for ($i = 0; $i < count($g_UnixExec); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_UnixExec[$i]) . "\n");
+             $tmpIndex[] = str_replace($l_CurrPath, '.', $g_UnixExec[$i]);
+         }
+
+         $tmpIndex = array_values(array_unique($tmpIndex));
+
+         for ($i = 0; $i < count($tmpIndex); $i++) {
+             fputs($l_FH, $tmpIndex[$i] . "\n");
          }
 
          fclose($l_FH);
