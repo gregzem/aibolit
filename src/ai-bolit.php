@@ -3844,6 +3844,10 @@ function Quarantine()
 		$files[] = strpos($file, './') === 0 ? substr($file, 2) : $file;
 	}
 	
+	// get config files for cleaning
+	$configFilesRegex = 'config(uration|\.in[ic])?\.php$|dbconn\.php$';
+	$configFiles = preg_grep("~$configFilesRegex~", $files);
+
 	// get columns width
 	$width = array();
 	foreach (array_keys($inf) as $k) {
@@ -3871,14 +3875,33 @@ function Quarantine()
 	unset($inf, $width);
 
 	exec("zip -v 2>&1", $output,$code);
-	
+
 	if ($code == 0) {
-		exec("cat AI-BOLIT-DOUBLECHECK.php|zip -@ --password $g_QuarantinePass $archive", $output, $code);
+		$filter = '';
+		if ($configFiles && exec("grep -V 2>&1", $output, $code) && $code == 0) {
+			$filter = "|grep -v -E '$configFilesRegex'";
+		}
+
+		exec("cat AI-BOLIT-DOUBLECHECK.php $filter |zip -@ --password $g_QuarantinePass $archive", $output, $code);
 		if ($code == 0) {
 			file_put_contents($infoFile, $info);
-			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report " . DOUBLECHECK_FILE);
+			$m = array();
+			if (!empty($filter)) {
+				foreach ($configFiles as $file) {
+					$tmp = file_get_contents($file);
+					// remove  passwords
+					$tmp = preg_replace('~^.*?pass.*~im', '', $tmp);
+					// new file name
+					$file = preg_replace('~.*/~', '', $file) . '-' . rand(100000, 999999);
+					file_put_contents($file, $tmp);
+					$m[] = $file;
+				}
+			}
+
+			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report " . DOUBLECHECK_FILE . ' ' . implode(' ', $m));
 			stdOut("\nCreate archive '" . realpath($archive) . "'");
 			stdOut("This archive have password '$g_QuarantinePass'");
+			foreach ($m as $file) unlink($file);
 			unlink($infoFile);
 			return;
 		}
@@ -3892,7 +3915,14 @@ function Quarantine()
 	}
 
 	foreach ($files as $file) {
-		$zip->addFile($file);
+		if (in_array($file, $configFiles)) {
+			$tmp = file_get_contents($file);
+			// remove  passwords
+			$tmp = preg_replace('~^.*?pass.*~im', '', $tmp);
+			$zip->addFromString($file, $tmp);
+		} else {
+			$zip->addFile($file);
+		}
 	}
 	$zip->addFile(DOUBLECHECK_FILE, DOUBLECHECK_FILE);
 	$zip->addFile($report, REPORT_FILE);
