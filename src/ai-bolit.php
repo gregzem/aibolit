@@ -3294,7 +3294,7 @@ if (defined('SCAN_FILE')) {
       // force to seek to last line
       $s_file->seek(PHP_INT_MAX);
       // get number of lines
-      $g_FoundTotalFiles = $g_Counter = $s_file->key();
+      $g_FoundTotalFiles = $g_Counter = $s_file->key() - 1;
       $i = 0;
       foreach ($s_file as $l_FN) {
          if (file_exists($l_FN)) {
