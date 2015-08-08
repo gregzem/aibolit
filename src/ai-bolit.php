@@ -2057,7 +2057,8 @@ function QCR_ScanDirectories($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
-			if (in_array(strtolower($l_Ext), $g_IgnoredExt)) {
+			$l_Ext2 = substr(strstr($l_FileName, '.'), 1);
+			if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
 
@@ -3297,7 +3298,7 @@ if (defined('SCAN_FILE')) {
       // force to seek to last line
       $s_file->seek(PHP_INT_MAX);
       // get number of lines
-      $g_FoundTotalFiles = $g_Counter = $s_file->key();
+      $g_FoundTotalFiles = $g_Counter = $s_file->key() - 1;
       $i = 0;
       foreach ($s_file as $l_FN) {
          if (file_exists($l_FN)) {
@@ -3373,34 +3374,21 @@ if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base6
 
          $l_CurrPath = dirname(__FILE__);
 
-         for ($i = 0; $i < count($g_CriticalPHP); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalPHP[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalPHP[$i]]));  
-         }
+         $tmpIndex = array_merge($g_CriticalPHP, $g_Base64, $g_CriticalJS, $g_Iframer, $g_Phishing);
+         $tmpIndex = array_values(array_unique($tmpIndex));
 
-         for ($i = 0; $i < count($g_Base64); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Base64[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Base64[$i]]));
-         }
-
-         for ($i = 0; $i < count($g_CriticalJS); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalJS[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_CriticalJS[$i]]));
-         }
-
-         for ($i = 0; $i < count($g_Iframer); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Iframer[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Iframer[$i]]));
+         for ($i = 0; $i < count($tmpIndex); $i++) {
+             $tmpIndex[$i] = str_replace($l_CurrPath, '.', $g_Structure['n'][$tmpIndex[$i]]);
          }
 
          for ($i = 0; $i < count($g_UnixExec); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_UnixExec[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_UnixExec[$i]));
+             $tmpIndex[] = str_replace($l_CurrPath, '.', $g_UnixExec[$i]);
          }
 
-         for ($i = 0; $i < count($g_Phishing); $i++) {
-             fputs($l_FH, str_replace($l_CurrPath, '.', $g_Structure['n'][$g_Phishing[$i]]) . "\n");
-             //unlink(str_replace($l_CurrPath, '.', $g_Phishing[$i]));
+         $tmpIndex = array_values(array_unique($tmpIndex));
+
+         for ($i = 0; $i < count($tmpIndex); $i++) {
+             fputs($l_FH, $tmpIndex[$i] . "\n");
          }
 
          fclose($l_FH);
@@ -3866,6 +3854,10 @@ function Quarantine()
 		$files[] = strpos($file, './') === 0 ? substr($file, 2) : $file;
 	}
 	
+	// get config files for cleaning
+	$configFilesRegex = 'config(uration|\.in[ic])?\.php$|dbconn\.php$';
+	$configFiles = preg_grep("~$configFilesRegex~", $files);
+
 	// get columns width
 	$width = array();
 	foreach (array_keys($inf) as $k) {
@@ -3893,14 +3885,33 @@ function Quarantine()
 	unset($inf, $width);
 
 	exec("zip -v 2>&1", $output,$code);
-	
+
 	if ($code == 0) {
-		exec("cat AI-BOLIT-DOUBLECHECK.php|zip -@ --password $g_QuarantinePass $archive", $output, $code);
+		$filter = '';
+		if ($configFiles && exec("grep -V 2>&1", $output, $code) && $code == 0) {
+			$filter = "|grep -v -E '$configFilesRegex'";
+		}
+
+		exec("cat AI-BOLIT-DOUBLECHECK.php $filter |zip -@ --password $g_QuarantinePass $archive", $output, $code);
 		if ($code == 0) {
 			file_put_contents($infoFile, $info);
-			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report");
+			$m = array();
+			if (!empty($filter)) {
+				foreach ($configFiles as $file) {
+					$tmp = file_get_contents($file);
+					// remove  passwords
+					$tmp = preg_replace('~^.*?pass.*~im', '', $tmp);
+					// new file name
+					$file = preg_replace('~.*/~', '', $file) . '-' . rand(100000, 999999);
+					file_put_contents($file, $tmp);
+					$m[] = $file;
+				}
+			}
+
+			exec("zip -j --password $g_QuarantinePass $archive $infoFile $report " . DOUBLECHECK_FILE . ' ' . implode(' ', $m));
 			stdOut("\nCreate archive '" . realpath($archive) . "'");
 			stdOut("This archive have password '$g_QuarantinePass'");
+			foreach ($m as $file) unlink($file);
 			unlink($infoFile);
 			return;
 		}
@@ -3914,8 +3925,16 @@ function Quarantine()
 	}
 
 	foreach ($files as $file) {
-		$zip->addFile($file);
+		if (in_array($file, $configFiles)) {
+			$tmp = file_get_contents($file);
+			// remove  passwords
+			$tmp = preg_replace('~^.*?pass.*~im', '', $tmp);
+			$zip->addFromString($file, $tmp);
+		} else {
+			$zip->addFile($file);
+		}
 	}
+	$zip->addFile(DOUBLECHECK_FILE, DOUBLECHECK_FILE);
 	$zip->addFile($report, REPORT_FILE);
 	$zip->addFromString($infoFile, $info);
 	$zip->close();
