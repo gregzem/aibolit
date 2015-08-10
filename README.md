@@ -1,4 +1,4 @@
 aibolit
 =======
 
-Free malware and antivirus scanner for websites and ISP
+Free malware and virus scanner for websites and ISP
