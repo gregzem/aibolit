@@ -3293,7 +3293,7 @@ if (defined('SCAN_FILE')) {
    }
 } else {
    // scan list of files from file
-   if (isset($options['with-doublecheck']) && file_exists(DOUBLECHECK_FILE)) {
+   if (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
       $s_file = new SplFileObject(DOUBLECHECK_FILE);
       $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
@@ -3337,7 +3337,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-doublecheck']))) {
+if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-2check']))) {
 QCR_GoScan(0);
 unlink(QUEUE_FILENAME);
 }
@@ -3366,7 +3366,7 @@ stdOut("\nBuilding report [ mode = " . AI_EXPERT . " ]\n");
 
 ////////////////////////////////////////////////////////////////////////////
 // save 
-if (isset($options['with-doublecheck']) || isset($options['quarantine']))
+if (isset($options['with-2check']) || isset($options['quarantine']))
 if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base64) > 0) OR 
    (count($g_Iframer) > 0) OR  (count($g_UnixExec))) 
 {
