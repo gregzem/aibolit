@@ -1462,7 +1462,8 @@ if (isCli())
 	$cli_longopts = array(
 		'cmd:',
 		'one-pass',
-		'quarantine'
+		'quarantine',
+		'with-doublecheck'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1497,6 +1498,7 @@ Current default path is: {$defaults['path']}
                        Run command after scanning
       --one-pass       Do not calculate remaining time
       --quarantine     Archive all malware from report
+      --with-doublecheck
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -3291,7 +3293,7 @@ if (defined('SCAN_FILE')) {
    }
 } else {
    // scan list of files from file
-   if (!$l_SpecifiedPath && file_exists(DOUBLECHECK_FILE)) {
+   if (isset($options['with-doublecheck']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
       $s_file = new SplFileObject(DOUBLECHECK_FILE);
       $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
@@ -3335,7 +3337,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || file_exists(DOUBLECHECK_FILE))) {
+if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-doublecheck']))) {
 QCR_GoScan(0);
 unlink(QUEUE_FILENAME);
 }
@@ -3364,11 +3366,12 @@ stdOut("\nBuilding report [ mode = " . AI_EXPERT . " ]\n");
 
 ////////////////////////////////////////////////////////////////////////////
 // save 
+if (isset($options['with-doublecheck']) || isset($options['quarantine']))
 if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base64) > 0) OR 
    (count($g_Iframer) > 0) OR  (count($g_UnixExec))) 
 {
 
-  if (!$l_SpecifiedPath && !file_exists(DOUBLECHECK_FILE)) {
+  if (!file_exists(DOUBLECHECK_FILE)) {
       if ($l_FH = fopen(DOUBLECHECK_FILE, 'w')) {
          fputs($l_FH, '<?php die("Forbidden"); ?>' . "\n");
 
