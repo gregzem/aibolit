@@ -836,7 +836,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150806');
+define('AI_VERSION', '20150810');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1463,7 +1463,7 @@ if (isCli())
 		'cmd:',
 		'one-pass',
 		'quarantine',
-		'with-doublecheck'
+		'with-2check'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1498,7 +1498,7 @@ Current default path is: {$defaults['path']}
                        Run command after scanning
       --one-pass       Do not calculate remaining time
       --quarantine     Archive all malware from report
-      --with-doublecheck
+      --with-2check    Create or use AI-BOLIT-DOUBLECHECK.php file
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -2454,7 +2454,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
                 }
 
 				// ignore itself
-				if (strpos($l_Content, 'HLKHLKJHKLHJGJG6789869869GGHJ') !== false) {
+				if (strpos($l_Content, 'HLKHLKJHKLHJGJG4567869869GGHJ') !== false) {
 					return;
 				}
 
@@ -2964,7 +2964,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 {
   global $g_ExceptFlex, $gXX_FlexDBShe, $gX_FlexDBShe, $g_FlexDBShe, $gX_DBShe, $g_DBShe, $g_Base64, $g_Base64Fragment;
 
-  // HLKHLKJHKLHJGJG6789869869GGHJ
+  // HLKHLKJHKLHJGJG4567869869GGHJ
 
   foreach ($g_FlexDBShe as $l_Item) {
     if (preg_match('#(' . $l_Item . ')#smiS', $l_Content, $l_Found, PREG_OFFSET_CAPTURE)) {
@@ -3293,7 +3293,7 @@ if (defined('SCAN_FILE')) {
    }
 } else {
    // scan list of files from file
-   if (isset($options['with-doublecheck']) && file_exists(DOUBLECHECK_FILE)) {
+   if (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
       $s_file = new SplFileObject(DOUBLECHECK_FILE);
       $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
@@ -3337,7 +3337,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-doublecheck']))) {
+if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-2check']))) {
 QCR_GoScan(0);
 unlink(QUEUE_FILENAME);
 }
@@ -3366,7 +3366,7 @@ stdOut("\nBuilding report [ mode = " . AI_EXPERT . " ]\n");
 
 ////////////////////////////////////////////////////////////////////////////
 // save 
-if (isset($options['with-doublecheck']) || isset($options['quarantine']))
+if (isset($options['with-2check']) || isset($options['quarantine']))
 if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base64) > 0) OR 
    (count($g_Iframer) > 0) OR  (count($g_UnixExec))) 
 {
