@@ -3340,6 +3340,7 @@ if (defined('SCAN_FILE')) {
         ICHECK and load_integrity_db();
         QCR_IntegrityCheck(ROOT_PATH);
         stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+        if (IMAKE) exit(0);
         if (ICHECK) {
             $i = $g_Counter;
             $g_CRC = 0;
@@ -4222,7 +4223,7 @@ function write_integrity_db_file($l_FileName = '') {
 	static $l_Buffer = '';
 
 	if (empty($l_FileName)) {
-		empty($l_Buffer) or file_put_contents(INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
+		empty($l_Buffer) or file_put_contents('compress.zlib://'.INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
 		$l_Buffer = '';
 		return;
 	}
@@ -4235,7 +4236,7 @@ function write_integrity_db_file($l_FileName = '') {
 	
 	if (strlen($l_Buffer) > 32000)
 	{
-		file_put_contents(INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
+		file_put_contents('compress.zlib://'.INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".INTEGRITY_DB_FILE);
 		$l_Buffer = '';
 	}
 }
@@ -4244,7 +4245,7 @@ function load_integrity_db() {
 	global $g_IntegrityDB;
 	file_exists(INTEGRITY_DB_FILE) or die('Not found ' . INTEGRITY_DB_FILE);
 
-	$s_file = new SplFileObject(INTEGRITY_DB_FILE);
+	$s_file = new SplFileObject('compress.zlib://'.INTEGRITY_DB_FILE);
 	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
 
 	foreach ($s_file as $line) {
