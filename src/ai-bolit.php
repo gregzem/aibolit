@@ -3295,20 +3295,25 @@ if (defined('SCAN_FILE')) {
    // scan list of files from file
    if (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.");
-      $s_file = new SplFileObject(DOUBLECHECK_FILE);
-      $s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
-      // force to seek to last line
-      $s_file->seek(PHP_INT_MAX);
-      // get number of lines
-      $g_FoundTotalFiles = $g_Counter = $s_file->key() - 1;
-      $i = 0;
-      foreach ($s_file as $l_FN) {
-         if (file_exists($l_FN)) {
-            QCR_ScanFile($l_FN, $i++); 
-         }
+      $lines = file(DOUBLECHECK_FILE);
+      for ($i = 0, $size = count($lines); $i < $size; $i++) {
+         $lines[$i] = trim($lines[$i]);
+         if (empty($lines[$i])) unset($lines[$i]);
+      }
+      /* skip first line with <?php die("Forbidden"); ?> */
+      unset($lines[0]);
+      $g_FoundTotalFiles = count($lines);
+      $i = 1;
+      foreach ($lines as $l_FN) {
+         is_dir($l_FN) && $g_TotalFolder++;
+         printProgress( $i++, $l_FN);
+         $BOOL_RESULT = true; // display disable
+         is_file($l_FN) && QCR_ScanFile($l_FN, $i);
+         $BOOL_RESULT = false; // display enable
       }
 
-      $s_file = null;
+      $g_FoundTotalDirs = $g_TotalFolder;
+      $g_FoundTotalFiles = $g_TotalFiles;
 
    } else {
       // scan whole file system
@@ -3321,7 +3326,7 @@ if (defined('SCAN_FILE')) {
 }
 
 //$g_FoundTotalFiles = count($g_Structure['n']);
-$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
+//$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
 
 QCR_Debug();
 
