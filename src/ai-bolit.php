@@ -64,7 +64,6 @@ define('DEBUG_MODE', 0);
 define('DIR_SEPARATOR', '/');
 
 define('DOUBLECHECK_FILE', 'AI-BOLIT-DOUBLECHECK.php');
-define('QUEUE_FILENAME', 'AI-BOLIT-QUEUE.txt');
 
 if ((isset($_SERVER['OS']) && stripos('Win', $_SERVER['OS']) !== false)/* && stripos('CygWin', $_SERVER['OS']) === false)*/) {
    define('DIR_SEPARATOR', '\\');
@@ -836,7 +835,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150810');
+define('AI_VERSION', '20150812');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1602,15 +1601,36 @@ HELP;
 		define('AI_EXPERT', AI_EXPERT_MODE); 
     }
 
+	$l_SpecifiedPath = false;
+	if (
+		(isset($options['path']) AND !empty($options['path']) AND ($path = $options['path']) !== false)
+		OR (isset($options['p']) AND !empty($options['p']) AND ($path = $options['p']) !== false)
+	)
+	{
+		$defaults['path'] = $path;
+		$l_SpecifiedPath = true;
+	}
+
+	$l_SuffixReport = str_replace('/var/www', '', $defaults['path']);
+	$l_SuffixReport = str_replace('/home', '', $l_SuffixReport);
+    $l_SuffixReport = preg_replace('#[/\\\.\s]#', '_', $l_SuffixReport);
+	$l_SuffixReport .=  "-" . rand(1, 999999);
+		
 	if (
 		(isset($options['report']) AND ($report = $options['report']) !== false)
 		OR (isset($options['r']) AND ($report = $options['r']) !== false)
 	)
 	{
+		$report = str_replace('@PATH@', $l_SuffixReport, $report);
+		$report = str_replace('@RND@', rand(1, 999999), $report);
+		$report = str_replace('@DATE@', date('d-m-Y-h-i'), $report);
 		define('REPORT', $report);
 	}
 
-	defined('REPORT') OR define('REPORT', 'AI-BOLIT-REPORT-' . date('d-m-Y_H-i') . '-' . rand(1, 999999) . '.html');
+    $l_ReportDirName = dirname($report);
+	define('QUEUE_FILENAME', ($l_ReportDirName != '' ? $l_ReportDirName . '/' : '') . 'AI-BOLIT-QUEUE-' . md5($defaults['path']) . '.txt');
+
+	defined('REPORT') OR define('REPORT', 'AI-BOLIT-REPORT-' . $l_SuffixReport . '-' . date('d-m-Y_H-i') . '.html');
 
 	$last_arg = max(1, sizeof($_SERVER['argv']) - 1);
 	if (isset($_SERVER['argv'][$last_arg]))
@@ -1625,16 +1645,6 @@ HELP;
 	}	
 	
 	
-	$l_SpecifiedPath = false;
-	if (
-		(isset($options['path']) AND !empty($options['path']) AND ($path = $options['path']) !== false)
-		OR (isset($options['p']) AND !empty($options['p']) AND ($path = $options['p']) !== false)
-	)
-	{
-		$defaults['path'] = $path;
-		$l_SpecifiedPath = true;
-	}
-
 	define('ONE_PASS', isset($options['one-pass']));
     
 } else {
@@ -1674,7 +1684,7 @@ define('ROOT_PATH', realpath($defaults['path']));
 
 if (!ROOT_PATH)
 {
-        if (isCli())  {
+    if (isCli())  {
 		die(stdOut("Directory '{$defaults['path']}' not found!"));
 	}
 }
