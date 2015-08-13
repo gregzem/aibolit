@@ -3352,7 +3352,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || isset($options['with-2check']))) {
+if (!(ONE_PASS || defined('SCAN_FILE') || (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) )) {
 QCR_GoScan(0);
 unlink(QUEUE_FILENAME);
 }
