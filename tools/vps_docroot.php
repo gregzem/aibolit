@@ -42,7 +42,7 @@ function scan_configs($path, $recurs) {
 
 			if (is_file($file)) {
                            $content = file_get_contents($file);
-                           if ((preg_match_all('~DocumentRoot\s+(/.+)$~mi', $content, $out, PREG_PATTERN_ORDER)) ||
+                           if ((preg_match_all('DocumentRoot\s+[\'"]?([^\s\'"]+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
                                (preg_match_all('~root\s+(/.+);$~mi', $content, $out, PREG_PATTERN_ORDER))) {
 				foreach ($out[1] as $index => $docroot) {
 				   $found_dirs[trim($docroot)] = 1;
