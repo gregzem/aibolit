@@ -2088,7 +2088,7 @@ function QCR_ScanDirectories($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
-			$l_Ext2 = substr(strstr($l_FileName, '.'), 1);
+			$l_Ext2 = substr(strstr(basename($l_FileName), '.'), 1);
 			if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
@@ -3360,7 +3360,18 @@ if (defined('SCAN_FILE')) {
             $i = $g_Counter;
             $g_CRC = 0;
             $changes = array();
+            $ref =& $g_IntegrityDB;
             foreach ($g_IntegrityDB as $l_FileName => $type) {
+                unset($g_IntegrityDB[$l_FileName]);
+                $l_Ext2 = substr(strstr(basename($l_FileName), '.'), 1);
+                if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
+                    continue;
+                }
+                for ($dr = 0; $dr < count($g_DirIgnoreList); $dr++) {
+                    if (($g_DirIgnoreList[$dr] != '') && preg_match('#' . $g_DirIgnorceList[$dr] . '#', $l_FileName, $l_Found)) {
+                        continue 2;
+                    }
+                }
                 $type = in_array($type, array('added', 'modified')) ? $type : 'deleted';
                 $type .= substr($l_FileName, -1) == '/' ? 'Dirs' : 'Files';
                 $changes[$type][] = ++$i;
@@ -4091,7 +4102,7 @@ function QCR_IntegrityCheck($l_RootDir)
 				'php4', 'php5', 'tpl', 'inc', 'htaccess', 'html', 'htm'
 			)));
 			
-			$l_Ext2 = substr(strstr($l_FileName, '.'), 1);
+			$l_Ext2 = substr(strstr(basename($l_FileName), '.'), 1);
 			if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
