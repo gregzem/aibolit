@@ -4235,7 +4235,7 @@ function icheck($l_FileName) {
 		return false;
 	}
 
-	$hash = is_file($l_FileName) ? hash_file('sha256', $l_FileName) : '';
+	$hash = is_file($l_FileName) ? hash_file('sha1', $l_FileName) : '';
 	
 	if ($g_IntegrityDB[$l_RelativePath] != $hash) {
 		$g_IntegrityDB[$l_RelativePath] =& $l_status['modified'];
@@ -4257,7 +4257,7 @@ function write_integrity_db_file($l_FileName = '') {
 
 	$l_RelativePath = getRelativePath($l_FileName);
 		
-	$hash = is_file($l_FileName) ? hash_file('sha256', $l_FileName) : '';
+	$hash = is_file($l_FileName) ? hash_file('sha1', $l_FileName) : '';
 
 	$l_Buffer .= "$l_RelativePath|$hash\n";
 	
