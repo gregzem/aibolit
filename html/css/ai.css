@@ -265,6 +265,7 @@
 
 .rep
 {
+  display: none;
   color: #303030;
   text-decoration: none;
   background: #94DDDB;
