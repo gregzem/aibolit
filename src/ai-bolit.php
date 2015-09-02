@@ -25,7 +25,7 @@ define('AI_EXPERT_MODE', 2);
 
 // Put any strong password to open the script from web
 // Впишите вместо put_any_strong_password_here сложный пароль	 
-define('PASS', '??????????????????'); 
+define('PASS', '?????????????????'); 
 
 //define('LANG', 'EN');
 define('LANG', 'RU');
@@ -841,7 +841,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150830');
+define('AI_VERSION', '20150901');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1768,7 +1768,7 @@ if (AI_EXPERT == 0) {
 } else {
 }
 
-$l_Template = str_replace('@@HEAD_TITLE@@', AI_STR_051 .  realpath('.'), $l_Template);
+$l_Template = str_replace('@@HEAD_TITLE@@', AI_STR_051 .  $g_AddPrefix . str_replace($g_NoPrefix, '', realpath('.')), $l_Template);
 
 define('QCR_INDEX_FILENAME', 'fn');
 define('QCR_INDEX_TYPE', 'type');
@@ -2041,7 +2041,7 @@ function QCR_ExtractInfo($par_Str) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-function QCR_Debug($par_Str) {
+function QCR_Debug($par_Str = "") {
   if (!DEBUG_MODE) {
      return;
   }
@@ -2503,7 +2503,7 @@ function QCR_ScanFile($l_Filename, $i = 0)
                 }
 
 				// ignore itself
-				if (strpos($l_Content, 'HLKHLKJHKLHJGJG4567869869GGHJ') !== false) {
+				if (strpos($l_Content, 'H24LKHLKJHKLHJGJG4567869869GGHJ') !== false) {
 					return;
 				}
 
@@ -2863,7 +2863,7 @@ function CheckException(&$l_Content, &$l_Found) {
    $l_FoundStrPlus = substr($l_Content, max($l_Found[0][1] - 10, 0), 70);
 
    foreach ($g_ExceptFlex as $l_ExceptItem) {
-      if (preg_match('#(' . $l_ExceptItem . ')#smi', $l_FoundStrPlus, $l_Detected)) {
+      if (@preg_match('#(' . $l_ExceptItem . ')#smi', $l_FoundStrPlus, $l_Detected)) {
          $l_Exception = true;
          return true;
       }
@@ -3066,7 +3066,7 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
   global $g_ExceptFlex, $gXX_FlexDBShe, $gX_FlexDBShe, $g_FlexDBShe, $gX_DBShe, $g_DBShe, $g_Base64, $g_Base64Fragment,
   $g_CriticalFiles, $g_CriticalEntries;
 
-  // HLKHLKJHKLHJGJG4567869869GGHJ
+  // H24LKHLKJHKLHJGJG4567869869GGHJ
 
   // need check file (by extension) ?
   $l_SkipCheck = SMART_SCAN;
@@ -3349,7 +3349,7 @@ if (file_exists($l_UrlIgnoreFilename)) {
 $g_AiBolitAbsolutePathKnownFiles = dirname($g_AiBolitAbsolutePath) . '/known_files';
 $g_AiBolitKnownFilesDirs = array('.');
 
-if ($l_DIRH = opendir($g_AiBolitAbsolutePathKnownFiles))
+if ($l_DIRH = @opendir($g_AiBolitAbsolutePathKnownFiles))
 {
     while (($l_FileName = readdir($l_DIRH)) !== false)
     {
@@ -3420,6 +3420,10 @@ if (defined('SCAN_FILE')) {
        stdOut("Error:" . SCAN_FILE . " either is not a file or readable");
    }
 } else {
+	if (isset($_GET['2check'])) {
+		$options['with-2check'] = 1;
+	}
+   
    // scan list of files from file
    if (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.\n");
@@ -3487,7 +3491,7 @@ QCR_Debug();
  }
 ////////////////////////////////////////////////////////////////////////////
 
-$l_Template = str_replace("@@PATH_URL@@", (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : realpath('.')), $l_Template);
+$l_Template = str_replace("@@PATH_URL@@", (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $g_AddPrefix . str_replace($g_NoPrefix, '', realpath('.'))), $l_Template);
 
 $time_taken = seconds2Human(microtime(true) - START_TIME);
 
@@ -4178,7 +4182,7 @@ function optSigCheck(&$sigs)
 	$result = true;
 
 	foreach ($sigs as $k => $sig) {
-		if (preg_match('#(' . $sig . ')#smiS', '') === false) {
+		if (@preg_match('#(' . $sig . ')#smiS', '') === false) {
 			$error = error_get_last();
 			//echo($error['message'] . "\n     pattern: " . $sig . "\n");
 			unset($sigs[$k]);
