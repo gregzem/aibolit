@@ -3491,7 +3491,7 @@ QCR_Debug();
  }
 ////////////////////////////////////////////////////////////////////////////
 
-$l_Template = str_replace("@@PATH_URL@@", (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : realpath('.')), $l_Template);
+$l_Template = str_replace("@@PATH_URL@@", (isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : $g_AddPrefix . str_replace($g_NoPrefix, '', realpath('.'))), $l_Template);
 
 $time_taken = seconds2Human(microtime(true) - START_TIME);
 
