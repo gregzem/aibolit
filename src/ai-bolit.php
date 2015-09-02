@@ -36,9 +36,9 @@ define('REPORT_MASK_DOORWAYS', 4);
 define('REPORT_MASK_SUSP', 8);
 define('REPORT_MASK_CANDI', 16);
 define('REPORT_MASK_WRIT', 32);
-define('REPORT_MASK_FULL', REPORT_MASK_PHPSIGN | REPORT_MASK_DOORWAYS | REPORT_MASK_SUSP
+define('REPORT_MASK_FULL', REPORT_MASK_PHPSIGN 
 /* <-- remove this line to enable "recommendations"  
-
+| REPORT_MASK_DOORWAYS | REPORT_MASK_SUSP
 | REPORT_MASK_SPAMLINKS 
 
  remove this line to enable "recommendations" --> */
@@ -52,7 +52,7 @@ $defaults = array(
 	'path' => dirname(__FILE__),
 	'scan_all_files' => 0, // full scan (rather than just a .js, .php, .html, .htaccess)
 	'scan_delay' => 0, // delay in file scanning to reduce system load
-	'max_size_to_scan' => '600K',
+	'max_size_to_scan' => '400K',
 	'site_url' => '', // website url
 	'no_rw_dir' => 0,
     'skip_ext' => '',
@@ -98,13 +98,13 @@ define('AI_STR_011', 'Текущая директория не доступна 
 define('AI_STR_012', "Затрачено времени: <b>%s</b>. Сканирование начато %s, сканирование завершено %s");
 define('AI_STR_013', 'Всего проверено %s директорий и %s файлов.');
 define('AI_STR_014', '<div class="rep" style="color: #0000A0">Внимание, скрипт выполнил быструю проверку сайта. Проверяются только наиболее критические файлы, но часть вредоносных скриптов может быть не обнаружена. Пожалуйста, запустите скрипт из командной строки для выполнения полного тестирования. Подробнее смотрите в <a href="http://revisium.com/ai/faq.php">FAQ вопрос №10</a>.</div>');
-define('AI_STR_015', '<div class="title">Критические замечания</div>');
+define('AI_STR_015', '<div class="title">Требуют внимания</div>');
 define('AI_STR_016', 'Эти файлы могут быть вредоносными или хакерскими скриптами');
-define('AI_STR_017', 'Вредоносные скрипты не найдены. Попробуйте сканер в режиме "Параноидальный".');
+define('AI_STR_017', 'Вредоносные скрипты не обнаружены');
 define('AI_STR_018', 'Эти файлы могут быть javascript вирусами');
-define('AI_STR_019', 'Обнаружены сигнатуры исполняемых файлов unix и нехарактерных скриптов. Они могут быть вредоносными файлами');
-define('AI_STR_020', 'Двойное расширение, зашифрованный контент или подозрение на вредоносный скрипт. Требуется дополнительный анализ');
-define('AI_STR_021', 'Подозрение на вредоносный скрипт');
+define('AI_STR_019', 'Обнаружены сигнатуры исполняемых файлов unix и нехарактерных скриптов. Они могут оказаться вредоносными файлами');
+define('AI_STR_020', 'Двойное расширение, зашифрованный контент или подозрение на вредоносный скрипт. Требуется дополнительный анализ данных файлов');
+define('AI_STR_021', 'Подозрение на вредоносный скрипт.');
 define('AI_STR_022', 'Символические ссылки (symlinks)');
 define('AI_STR_023', 'Скрытые файлы');
 define('AI_STR_024', 'Возможно, каталог с дорвеем');
@@ -139,12 +139,12 @@ define('AI_STR_056', 'Дробление строки на символы');
 define('AI_STR_057', 'Сканирование выполнено в экспресс-режиме. Многие вредоносные скрипты могут быть не обнаружены.<br> Рекомендуем проверить сайт в режиме "Эксперт" или "Параноидальный". Подробно описано в <a href="http://revisium.com/ai/faq.php">FAQ</a> и инструкции к скрипту.');
 define('AI_STR_058', 'Обнаружены фишинговые страницы');
 
-define('AI_STR_059', 'Мобильных редиректов');
-define('AI_STR_060', 'Вредоносных скриптов');
-define('AI_STR_061', 'JS Вирусов');
-define('AI_STR_062', 'Фишинговых страниц');
-define('AI_STR_063', 'Исполняемых файлов');
-define('AI_STR_064', 'IFRAME вставок');
+define('AI_STR_059', 'Возможен редирект');
+define('AI_STR_060', 'Подозрение на вредоносный скрипт');
+define('AI_STR_061', 'Подозрение на JS вирус');
+define('AI_STR_062', 'Возможно, фишинговые страниц');
+define('AI_STR_063', 'Исполняемых файлы Unix');
+define('AI_STR_064', 'IFRAME вставки');
 define('AI_STR_065', 'Пропущенных больших файлов');
 define('AI_STR_066', 'Ошибок чтения файлов');
 define('AI_STR_067', 'Зашифрованных файлов');
@@ -3737,7 +3737,7 @@ if (count($g_SymLinks) > 0) {
 ////////////////////////////////////
 
 $l_Result .= "<div style=\"margin-top: 20px\" class=\"title\">" . AI_STR_026 . "</div>";
-
+/*
 stdOut("Building list of heuristics " . count($g_HeuristicDetected));
 
 if (count($g_HeuristicDetected) > 0) {
@@ -3750,7 +3750,7 @@ if (count($g_HeuristicDetected) > 0) {
 
   $l_ShowOffer = true;
 }
-
+*/
 stdOut("Building list of hidden files " . count($g_HiddenFiles));
 if (count($g_HiddenFiles) > 0) {
   $l_Result .= '<div class="note_warn">' . AI_STR_023 . ' (' . count($g_HiddenFiles) . ')</div><div class="warn">';
@@ -3768,7 +3768,7 @@ if (count($g_BigFiles) > 0) {
   $l_Result .= printList($g_BigFiles);
   $l_Result .= "</div>";
 } 
-
+/*
 stdOut("Building list of php inj " . count($g_PHPCodeInside));
 
 if ((count($g_PHPCodeInside) > 0) && (($defaults['report_mask'] & REPORT_MASK_PHPSIGN) == REPORT_MASK_PHPSIGN)) {
@@ -3779,7 +3779,7 @@ if ((count($g_PHPCodeInside) > 0) && (($defaults['report_mask'] & REPORT_MASK_PH
   $l_Result .= "</div>" . PHP_EOL;
 
 }
-
+*/
 stdOut("Building list of adware " . count($g_AdwareList));
 
 if (count($g_AdwareList) > 0) {
@@ -3791,7 +3791,7 @@ if (count($g_AdwareList) > 0) {
 
 }
 
-
+/*
 stdOut("Building list of empty links " . count($g_EmptyLink));
 if (count($g_EmptyLink) > 0) {
   $l_ShowOffer = true;
@@ -3825,7 +3825,7 @@ if ((count($g_Doorway) > 0) && (($defaults['report_mask'] & REPORT_MASK_DOORWAYS
   $l_Result .= "</div>" . PHP_EOL;
 
 }
-
+*/
 stdOut("Building list of php warnings " . (count($g_WarningPHP[0]) + count($g_WarningPHP[1])));
 
 if (($defaults['report_mask'] & REPORT_MASK_SUSP) == REPORT_MASK_SUSP) {
@@ -3842,14 +3842,14 @@ if (($defaults['report_mask'] & REPORT_MASK_SUSP) == REPORT_MASK_SUSP) {
 
    } 
 }
-
+/*
 stdOut("Building list of skipped dirs " . count($g_SkippedFolders));
 if (count($g_SkippedFolders) > 0) {
   $l_Result .= '<div class="note_warn">' . AI_STR_036 . '</div><div class="warn">';
      $l_Result .= implode("<br>", $g_SkippedFolders);
      $l_Result .= "</div>" . PHP_EOL;
  }
-
+*/
  if (count($g_CMS) > 0) {
       $l_Result .= "<div class=\"note_warn\">" . AI_STR_037 . "<br/>";
       $l_Result .= implode("<br>", $g_CMS);
