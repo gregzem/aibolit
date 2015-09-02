@@ -841,7 +841,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20150901');
+define('AI_VERSION', '20150901_BEGET');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2092,18 +2092,18 @@ function QCR_ScanDirectories($l_RootDir)
                         } else
 						
 						if ($l_Type != "file" && $l_Type != "dir" ) {
-							$g_UnixExec[] = $l_FileName;
+							//$g_UnixExec[] = $l_FileName;
 							continue;
 						}	
 						
 			$l_Ext = substr($l_FileName, strrpos($l_FileName, '.') + 1);
 			$l_IsDir = is_dir($l_FileName);
-
+			/*
 			if (in_array($l_Ext, $g_SuspiciousFiles)) 
 			{
                 $g_UnixExec[] = $l_FileName;
             }
-
+*/
 
 			// which files should be scanned
 			$l_NeedToScan = SCAN_ALL_FILES || (in_array($l_Ext, $g_SensitiveFiles));
