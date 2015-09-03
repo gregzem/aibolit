@@ -10,7 +10,7 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  apt-get install -y byobu curl git htop man unzip vim wget && \
+  apt-get install -y byobu curl git vim php5 sudo && \
   rm -rf /var/lib/apt/lists/*
 
 # Prepare environment
@@ -21,11 +21,10 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E007F6BD
 RUN echo "deb http://ppa.launchpad.net/chazomaticus/minit/ubuntu quantal main" > /etc/apt/sources.list.d/minit.list
 RUN apt-get update && apt-get upgrade -y && apt-get install -y minit # etc.
 
-RUN apt-get install -y php5 sudo
 RUN mkdir -p /home/report && chmod 777 /home/report &&\
     cd /home/beget &&\
     git config --global http.sslVerify false &&\
-    git clone -b master -- https://gitlab.beget.ru/amanikin/aibolit.git/ &&\
+    git clone -b beget -- https://github.com/AlexeyManikin/aibolit.git &&\
     chmod 755 /home/beget/aibolit -R &&\
     mkdir /home/beget/site
 
