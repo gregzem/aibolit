@@ -23,11 +23,10 @@ $include_dirs = array(
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 function scan_configs($path, $recurs) {
 	global $found_dirs;
-
 	if (!file_exists($path)) {
            return; 
         }
-
+		
 	if ($dir = opendir($path)) {
 		while($file = readdir($dir)) {
 			if (($file == '.') or ($file == '..'))
@@ -35,14 +34,15 @@ function scan_configs($path, $recurs) {
 			
 			$name = $file;
 			$file = $path . '/' . $file;
-
+			
 			if (is_dir($file) && $recurs)  {
 				scan_configs($file, true);
 			}
 
 			if (is_file($file)) {
                            $content = file_get_contents($file);
-                           if ((preg_match_all('~DocumentRoot\s+[\'"]?([^\s\'"]+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
+                           if ((preg_match_all('~DocumentRoot\s+[\'"]?(/[^\s\'"]+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
+						   	   (preg_match_all('~DocumentRoot\s+(/.+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
                                (preg_match_all('~root\s+(/.+);$~mi', $content, $out, PREG_PATTERN_ORDER))) {
 				foreach ($out[1] as $index => $docroot) {
 				   $found_dirs[trim($docroot)] = 1;
@@ -64,8 +64,8 @@ scan_configs('/usr/local/directadmin/data', true);
 
 $result_list = array_merge(array_diff(array_keys($found_dirs), $exclude_dirs), $include_dirs);
 
-
 foreach ($result_list as $dir) {
-   if (is_readable($dir)) echo $dir . "\n";
+   //if (file_exists($dir)) 
+	   echo $dir . "\n";
 }
 
