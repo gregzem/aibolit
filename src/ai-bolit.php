@@ -44,7 +44,7 @@ define('REPORT_MASK_FULL', REPORT_MASK_PHPSIGN | REPORT_MASK_DOORWAYS | REPORT_M
  remove this line to enable "recommendations" --> */
 );
 
-define('SMART_SCAN', 1);
+define('SMART_SCAN', 0);
 
 define('AI_EXTRA_WARN', 0);
 
@@ -2108,8 +2108,7 @@ function QCR_ScanDirectories($l_RootDir)
 			// which files should be scanned
 			$l_NeedToScan = SCAN_ALL_FILES || (in_array($l_Ext, $g_SensitiveFiles));
 			
-			$l_Ext2 = substr(strstr($l_FileName, '.'), 1);
-			if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
+			if (in_array(strtolower($l_Ext), $g_IgnoredExt)) {
                            $l_NeedToScan = false;
                         }
 
