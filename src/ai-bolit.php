@@ -78,13 +78,14 @@ $g_VirusFiles = array('js', 'html', 'htm', 'suspicious');
 $g_VirusEntries = '<\s*script|<\s*iframe|<\s*object|<\s*embed|setTimeout|setInterval|location\.|document\.|window\.|navigator\.|\$(this)\.';
 $g_PhishFiles = array('js', 'html', 'htm', 'suspicious', 'php');
 $g_PhishEntries = '<\s*title|<\s*html|<\s*form|<\s*body';
+$g_ShortListExt = array('php', 'php3', 'php4', 'php5', 'html', 'htm', 'phtml', 'shtml', 'khtml');
 
 if (LANG == 'RU') {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // RUSSIAN INTERFACE
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 define('AI_STR_001', 'Отчет сканера AI-Bolit v@@VERSION@@:');
-define('AI_STR_002', '<b>Компания <a href="http://revisium.com/">"Ревизиум"</a>. Лечение сайтов от вирусов и защита от взлома.</b><p>Предлагаем услуги превентивной защиты сайта от взлома с использованием процедуры cms hardening ("цементирование сайта"). Подробности на <a href="http://revisium.com/ru/clients_faq/#m4">странице услуги</a>. <p>Лучшее лечение &mdash; это профилактика.');
+define('AI_STR_002', '<b>Компания <a href="https://revisium.com/">"Ревизиум"</a>. Лечение сайтов от вирусов и защита от взлома.</b><p>Предлагаем услуги превентивной защиты сайта от взлома с использованием процедуры cms hardening ("цементирование сайта"). Подробности на <a href="https://revisium.com/ru/clients_faq/#m4">странице услуги</a>. <p>Лучшее лечение &mdash; это профилактика.');
 define('AI_STR_003', 'Не оставляйте файл отчета на сервере, и не давайте на него прямых ссылок с других сайтов. Информация из отчета может быть использована злоумышленника для взлома сайта, так как содержит информацию о файлах и настройках сервера.');
 define('AI_STR_004', 'Путь');
 define('AI_STR_005', 'Изменение свойств');
@@ -97,7 +98,7 @@ define('AI_STR_010', "Сканер AI-Bolit запускается с парол
 define('AI_STR_011', 'Текущая директория не доступна для чтения скрипту. Пожалуйста, укажите права на доступ <b>rwxr-xr-x</b> или с помощью командной строки <b>chmod +r имя_директории</b>');
 define('AI_STR_012', "Затрачено времени: <b>%s</b>. Сканирование начато %s, сканирование завершено %s");
 define('AI_STR_013', 'Всего проверено %s директорий и %s файлов.');
-define('AI_STR_014', '<div class="rep" style="color: #0000A0">Внимание, скрипт выполнил быструю проверку сайта. Проверяются только наиболее критические файлы, но часть вредоносных скриптов может быть не обнаружена. Пожалуйста, запустите скрипт из командной строки для выполнения полного тестирования. Подробнее смотрите в <a href="http://revisium.com/ai/faq.php">FAQ вопрос №10</a>.</div>');
+define('AI_STR_014', '<div class="rep" style="color: #0000A0">Внимание, скрипт выполнил быструю проверку сайта. Проверяются только наиболее критические файлы, но часть вредоносных скриптов может быть не обнаружена. Пожалуйста, запустите скрипт из командной строки для выполнения полного тестирования. Подробнее смотрите в <a href="https://revisium.com/ai/faq.php">FAQ вопрос №10</a>.</div>');
 define('AI_STR_015', '<div class="title">Критические замечания</div>');
 define('AI_STR_016', 'Эти файлы могут быть вредоносными или хакерскими скриптами');
 define('AI_STR_017', 'Вредоносные скрипты не найдены. Попробуйте сканер в режиме "Параноидальный".');
@@ -129,14 +130,14 @@ define('AI_STR_042', 'Не найдено директорий, доступны
 define('AI_STR_043', 'Использовано памяти при сканировании: ');
 define('AI_STR_044', 'Просканированы только файлы, перечисленные в ' . DOUBLECHECK_FILE . '. Для полного сканирования удалите файл ' . DOUBLECHECK_FILE . ' и запустите сканер повторно.');
 define('AI_STR_045', '<div class="rep">Внимание! Выполнена экспресс-проверка сайта. Просканированы только файлы с расширением .php, .js, .html, .htaccess. В этом режиме могут быть пропущены вирусы и хакерские скрипты в файлах с другими расширениями. Чтобы выполнить более тщательное сканирование, поменяйте значение настройки на <b>\'scan_all_files\' => 1</b> в строке 50 или откройте сканер в браузере с параметром full: <b><a href="ai-bolit.php?p=' . PASS . '&full">ai-bolit.php?p=' . PASS . '&full</a></b>. <p>Не забудьте перед повторным запуском удалить файл ' . DOUBLECHECK_FILE . '</div>');
-define('AI_STR_050', 'Замечания и предложения по работе скрипта и не обнаруженные вредоносные скрипты присылайте на <a href="mailto:ai@revisium.com">ai@revisium.com</a>.<p>Также будем чрезвычайно благодарны за любые упоминания скрипта AI-Bolit на вашем сайте, в блоге, среди друзей, знакомых и клиентов. Ссылочку можно поставить на <a href="http://revisium.com/ai/">http://revisium.com/ai/</a>. <p>Если будут вопросы - пишите <a href="mailto:ai@revisium.com">ai@revisium.com</a>. ');
+define('AI_STR_050', 'Замечания и предложения по работе скрипта и не обнаруженные вредоносные скрипты присылайте на <a href="mailto:ai@revisium.com">ai@revisium.com</a>.<p>Также будем чрезвычайно благодарны за любые упоминания скрипта AI-Bolit на вашем сайте, в блоге, среди друзей, знакомых и клиентов. Ссылочку можно поставить на <a href="https://revisium.com/ai/">https://revisium.com/ai/</a>. <p>Если будут вопросы - пишите <a href="mailto:ai@revisium.com">ai@revisium.com</a>. ');
 define('AI_STR_051', 'Отчет по ');
 define('AI_STR_052', 'Эвристический анализ обнаружил подозрительные файлы. Проверьте их на наличие вредоносного кода.');
 define('AI_STR_053', 'Много косвенных вызовов функции');
 define('AI_STR_054', 'Подозрение на обфусцированные переменные');
 define('AI_STR_055', 'Подозрительное использование массива глобальных переменных');
 define('AI_STR_056', 'Дробление строки на символы');
-define('AI_STR_057', 'Сканирование выполнено в экспресс-режиме. Многие вредоносные скрипты могут быть не обнаружены.<br> Рекомендуем проверить сайт в режиме "Эксперт" или "Параноидальный". Подробно описано в <a href="http://revisium.com/ai/faq.php">FAQ</a> и инструкции к скрипту.');
+define('AI_STR_057', 'Сканирование выполнено в экспресс-режиме. Многие вредоносные скрипты могут быть не обнаружены.<br> Рекомендуем проверить сайт в режиме "Эксперт" или "Параноидальный". Подробно описано в <a href="https://revisium.com/ai/faq.php">FAQ</a> и инструкции к скрипту.');
 define('AI_STR_058', 'Обнаружены фишинговые страницы');
 
 define('AI_STR_059', 'Мобильных редиректов');
@@ -154,14 +155,14 @@ define('AI_STR_070', 'Скрытых файлов');
 define('AI_STR_072', 'Рекламных ссылок и кодов');
 define('AI_STR_073', 'Пустых ссылок');
 define('AI_STR_074', 'Сводный отчет');
-define('AI_STR_075', 'Скрипт бесплатный только для личного некоммерческого использования. Есть <a href="http://revisium.com/ai/faq.php#faq11" target=_blank>коммерческая лицензия</a> (пункт №11).');
+define('AI_STR_075', 'Скрипт бесплатный только для личного некоммерческого использования. Есть <a href="https://revisium.com/ai/faq.php#faq11" target=_blank>коммерческая лицензия</a> (пункт №11).');
 
 $tmp_str = <<<HTML_FOOTER
    <div class="disclaimer"><span class="vir">[!]</span> Отказ от гарантий: невозможно гарантировать обнаружение всех вредоносных скриптов. Поэтому разработчик сканера не несет ответственности за возможные последствия работы сканера AI-Bolit или неоправданные ожидания пользователей относительно функциональности и возможностей.
    </div>
    <div class="thanx">
       Замечания и предложения по работе скрипта, а также не обнаруженные вредоносные скрипты вы можете присылать на <a href="mailto:ai@revisium.com">ai@revisium.com</a>.<br/>
-      Также будем чрезвычайно благодарны за любые упоминания сканера AI-Bolit на вашем сайте, в блоге, среди друзей, знакомых и клиентов. <br/>Ссылку можно поставить на страницу <a href="http://revisium.com/ai/">http://revisium.com/ai/</a>.<br/> 
+      Также будем чрезвычайно благодарны за любые упоминания сканера AI-Bolit на вашем сайте, в блоге, среди друзей, знакомых и клиентов. <br/>Ссылку можно поставить на страницу <a href="https://revisium.com/ai/">https://revisium.com/ai/</a>.<br/> 
      <p>Получить консультацию или задать вопросы можно по email <a href="mailto:ai@revisium.com">ai@revisium.com</a>.</p> 
 	</div>
 HTML_FOOTER;
@@ -172,6 +173,12 @@ define('AI_STR_078', "Подозрительные атрибуты файла")
 define('AI_STR_079', "Подозрительное местоположение файла");
 define('AI_STR_080', "Обращаем внимание, что обнаруженные файлы не всегда являются вирусами и хакерскими скриптами. Сканер старается минимизировать число ложных обнаружений, но это не всегда возможно, так как найденный фрагмент может встречаться как во вредоносных скриптах, так и в обычных.");
 define('AI_STR_081', "Уязвимости в скриптах");
+define('AI_STR_082', "Добавленные файлы");
+define('AI_STR_083', "Измененные файлы");
+define('AI_STR_084', "Удаленные файлы");
+define('AI_STR_085', "Добавленные каталоги");
+define('AI_STR_086', "Удаленные каталоги");
+define('AI_STR_087', "Изменения в файловой структуре");
 
 $l_Offer =<<<OFFER
     <div>
@@ -180,11 +187,11 @@ $l_Offer =<<<OFFER
 	</div>
 	<br/>
 	<div>
-	   Обратитесь в <a href="http://revisium.com/" target=_blank>компанию "Ревизиум"</a> за консультацией или закажите лечение сайта и защиту от взлома.<br/>
+	   Обратитесь в <a href="https://revisium.com/" target=_blank>компанию "Ревизиум"</a> за консультацией или закажите лечение сайта и защиту от взлома.<br/>
 	</div>
 	<br/>
 	<div>
-	   <a href="mailto:ai@revisium.com">ai@revisium.com</a>, <a href="http://revisium.com/ru/order/">http://revisium.com</a>
+	   <a href="mailto:ai@revisium.com">ai@revisium.com</a>, <a href="https://revisium.com/ru/order/">https://revisium.com</a>
 	</div>
     <div class="caution">@@CAUTION@@</div>
 OFFER;
@@ -239,7 +246,7 @@ define('AI_STR_042', 'Writable folders not found');
 define('AI_STR_043', 'Memory used: ');
 define('AI_STR_044', 'Quick scan through the files from ' . DOUBLECHECK_FILE . '. For full scan remove ' . DOUBLECHECK_FILE . ' and launch scanner once again.');
 define('AI_STR_045', '<div class="notice"><span class="vir">[!]</span> Ai-BOLIT is working in quick scan mode, only .php, .html, .htaccess files will be checked. Change the following setting \'scan_all_files\' => 1 to perform full scanning.</b>. </div>');
-define('AI_STR_050', "I'm sincerely appreciate reports for any bugs you may found in the script. Please email me: <a href=\"mailto:audit@revisium.com\">audit@revisium.com</a>.<p> Also I appriciate any reference to the script in your blog or forum posts. Thank you for the link to download page: <a href=\"http://revisium.com/aibo/\">http://revisium.com/aibo/</a>");
+define('AI_STR_050', "I'm sincerely appreciate reports for any bugs you may found in the script. Please email me: <a href=\"mailto:audit@revisium.com\">audit@revisium.com</a>.<p> Also I appriciate any reference to the script in your blog or forum posts. Thank you for the link to download page: <a href=\"https://revisium.com/aibo/\">https://revisium.com/aibo/</a>");
 define('AI_STR_051', 'Report for ');
 define('AI_STR_052', 'Heuristic Analyzer has detected suspicious files. Check if they are malware.');
 define('AI_STR_053', 'Function called by reference');
@@ -270,7 +277,7 @@ $tmp_str =<<<HTML_FOOTER
 		   <div class="disclaimer"><span class="vir">[!]</span> Disclaimer: We're not liable to you for any damages, including general, special, incidental or consequential damages arising out of the use or inability to use the script (including but not limited to loss of data or report being rendered inaccurate or failure of the script). There's no warranty for the program. Use at your own risk. 
 		   </div>
 		   <div class="thanx">
-		      We're greatly appreciate for any references in the social networks, forums or blogs to our scanner AI-BOLIT <a href="http://revisium.com/aibo/">http://revisium.com/aibo/</a>.<br/> 
+		      We're greatly appreciate for any references in the social networks, forums or blogs to our scanner AI-BOLIT <a href="https://revisium.com/aibo/">https://revisium.com/aibo/</a>.<br/> 
 		     <p>Write us if you have any questions regarding scannner usage or report <a href="mailto:ai@revisium.com">ai@revisium.com</a>.</p> 
 			</div>
 HTML_FOOTER;
@@ -279,16 +286,21 @@ define('AI_STR_077', "Suspicious file mtime and ctime");
 define('AI_STR_078', "Suspicious file permissions");
 define('AI_STR_079', "Suspicious file location");
 define('AI_STR_081', "Vulnerable Scripts");
-
+define('AI_STR_082', "Added files");
+define('AI_STR_083', "Modified files");
+define('AI_STR_084', "Deleted files");
+define('AI_STR_085', "Added directories");
+define('AI_STR_086', "Deleted directories");
+define('AI_STR_087', "Integrity Check Report");
 
 $l_Offer =<<<HTML_OFFER_EN
 <div>
  <div class="crit" style="font-size: 17px;"><b>Attention! Malicious software has been detected on the website.</b></div> 
- <br/>Most likely the website has been compromised. Please, <a href="http://revisium.com/en/home/" target=_blank>contact information security specialist</a> or experienced webmaster to clean the malware.
+ <br/>Most likely the website has been compromised. Please, <a href="https://revisium.com/en/home/" target=_blank>contact information security specialist</a> or experienced webmaster to clean the malware.
 </div>
 <br/>
 <div>
-   <a href="mailto:ai@revisium.com">ai@revisium.com</a>, <a href="http://revisium.com/ru/order/">http://revisium.com</a>
+   <a href="mailto:ai@revisium.com">ai@revisium.com</a>, <a href="https://revisium.com/ru/order/">https://revisium.com</a>
 </div>
 <div class="caution">@@CAUTION@@</div>
 HTML_OFFER_EN;
@@ -306,11 +318,11 @@ $l_Template =<<<MAIN_PAGE
 <META NAME="ROBOTS" CONTENT="NOINDEX,NOFOLLOW">
 <title>@@HEAD_TITLE@@</title>
 <style type="text/css" title="currentStyle">
-	@import "http://revisium.com/extra/media/css/demo_page2.css";
-	@import "http://revisium.com/extra/media/css/jquery.dataTables2.css";
+	@import "https://revisium.com/extra/media/css/demo_page2.css";
+	@import "https://revisium.com/extra/media/css/jquery.dataTables2.css";
 </style>
 
-<script type="text/javascript" language="javascript" src="http://yandex.st/jquery/2.1.0/jquery.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://yandex.st/jquery/2.1.0/jquery.min.js"></script>
 <script type="text/javascript" language="javascript" src="https://datatables.net/download/build/jquery.dataTables.js"></script>
 
 <style type="text/css">
@@ -396,6 +408,11 @@ $l_Template =<<<MAIN_PAGE
 .crit, .vir
 {
   color: #D84B55;
+}
+
+.intitem
+{
+  color:#4a6975;
 }
 
 .spacer
@@ -538,6 +555,15 @@ $l_Template =<<<MAIN_PAGE
 {
    margin: 10px 0 10px 0;
    color: #F6B700;
+   font-size: 15px;
+   font-weight: 700;
+   clear:both;
+}
+
+.note_int
+{
+   margin: 10px 0 10px 0;
+   color: #60b5d6;
    font-size: 15px;
    font-weight: 700;
    clear:both;
@@ -839,9 +865,17 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "# Some function might not work properly             #\n";
   echo "# See FAQ: http://revisium.com/ai/faq.php           #\n";
   echo "#####################################################\n";
+  exit;
 }
 
-define('AI_VERSION', '20150901');
+if (!(function_exists("file_put_contents") && is_callable("file_put_contents"))) {
+    echo "#####################################################\n";
+	echo "file_put_contents() is disabled. Cannot proceed.\n";
+    echo "#####################################################\n";	
+    exit;
+}
+
+define('AI_VERSION', '20150914');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1462,6 +1496,7 @@ if (isCli())
 		'e:' => 'cms:',
 		'x:' => 'mode:',
 		'k:' => 'skip:',
+		'i:' => 'idb:',
 		'h' => 'help'
 	);
 
@@ -1471,7 +1506,9 @@ if (isCli())
 		'addprefix:',
 		'one-pass',
 		'quarantine',
-		'with-2check'
+		'with-2check',
+		'imake',
+		'icheck'
 	);
 	$cli_longopts = array_merge($cli_longopts, array_values($cli_options));
 
@@ -1507,6 +1544,10 @@ Current default path is: {$defaults['path']}
       --one-pass       Do not calculate remaining time
       --quarantine     Archive all malware from report
       --with-2check    Create or use AI-BOLIT-DOUBLECHECK.php file
+      --imake
+      --icheck
+      --idb=file	   Integrity Check database file
+
       --help           Display this help and exit
 
 * Mandatory arguments listed below are required for both full and short way of usage.
@@ -1654,10 +1695,23 @@ HELP;
 		define('REPORT', $report);
 	}
 
+	if (
+		(isset($options['idb']) AND ($ireport = $options['idb']) !== false)
+	)
+	{
+		$ireport = str_replace('@PATH@', $l_SuffixReport, $ireport);
+		$ireport = str_replace('@RND@', rand(1, 999999), $ireport);
+		$ireport = str_replace('@DATE@', date('d-m-Y-h-i'), $ireport);
+		define('INTEGRITY_DB_FILE', $ireport);
+	}
+
+  
     $l_ReportDirName = dirname($report);
 	define('QUEUE_FILENAME', ($l_ReportDirName != '' ? $l_ReportDirName . '/' : '') . 'AI-BOLIT-QUEUE-' . md5($defaults['path']) . '.txt');
 
 	defined('REPORT') OR define('REPORT', 'AI-BOLIT-REPORT-' . $l_SuffixReport . '-' . date('d-m-Y_H-i') . '.html');
+	
+	defined('INTEGRITY_DB_FILE') OR define('INTEGRITY_DB_FILE', 'AINTEGRITY-' . $l_SuffixReport . '-' . date('d-m-Y_H-i'));
 
 	$last_arg = max(1, sizeof($_SERVER['argv']) - 1);
 	if (isset($_SERVER['argv'][$last_arg]))
@@ -1673,7 +1727,12 @@ HELP;
 	
 	
 	define('ONE_PASS', isset($options['one-pass']));
-    
+
+	define('IMAKE', isset($options['imake']));
+	define('ICHECK', isset($options['icheck']));
+
+	if (IMAKE && ICHECK) die('One of the following options must be used --imake or --icheck.');
+
 } else {
    define('AI_EXPERT', AI_EXPERT_MODE); 
    define('ONE_PASS', true);
@@ -2065,7 +2124,7 @@ function QCR_ScanDirectories($l_RootDir)
 	global $g_Structure, $g_Counter, $g_Doorway, $g_FoundTotalFiles, $g_FoundTotalDirs, 
 			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
                         $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec, $g_IgnoredExt, $g_SensitiveFiles, 
-						$g_SuspiciousFiles;
+						$g_SuspiciousFiles, $g_ShortListExt;
 
 	static $l_Buffer = '';
 
@@ -2086,15 +2145,14 @@ function QCR_ScanDirectories($l_RootDir)
 
 			$l_Type = filetype($l_FileName);
             if ($l_Type == "link") 
-                        {
-                            $g_SymLinks[] = $l_FileName;
-                            continue;
-                        } else
-						
-						if ($l_Type != "file" && $l_Type != "dir" ) {
-							$g_UnixExec[] = $l_FileName;
-							continue;
-						}	
+            {
+                $g_SymLinks[] = $l_FileName;
+                continue;
+            } else			
+			if ($l_Type != "file" && $l_Type != "dir" ) {
+				$g_UnixExec[] = $l_FileName;
+				continue;
+			}	
 						
 			$l_Ext = substr($l_FileName, strrpos($l_FileName, '.') + 1);
 			$l_IsDir = is_dir($l_FileName);
@@ -2104,14 +2162,12 @@ function QCR_ScanDirectories($l_RootDir)
                 $g_UnixExec[] = $l_FileName;
             }
 
-
 			// which files should be scanned
 			$l_NeedToScan = SCAN_ALL_FILES || (in_array($l_Ext, $g_SensitiveFiles));
 			
-			if (in_array(strtolower($l_Ext), $g_IgnoredExt)) {
-                           $l_NeedToScan = false;
-                        }
-
+			if (in_array(strtolower($l_Ext), $g_IgnoredExt)) {    
+		       $l_NeedToScan = false;
+            }
 
 			if ($l_IsDir)
 			{
@@ -2156,17 +2212,12 @@ function QCR_ScanDirectories($l_RootDir)
 				$g_FoundTotalDirs++;
 
 				QCR_ScanDirectories($l_FileName);
-
 			} else
 			{
 				if ($l_NeedToScan)
 				{
 					$g_FoundTotalFiles++;
-					if (in_array($l_Ext, array(
-						'php', 'php3',
-						'php4', 'php5', 'html', 'htm', 'phtml', 'shtml', 'khtml'
-					))
-					)
+					if (in_array($l_Ext, $g_ShortListExt)) 
 					{
 						$l_DoorwayFilesCounter++;
 						
@@ -3424,7 +3475,7 @@ if (defined('SCAN_FILE')) {
 	}
    
    // scan list of files from file
-   if (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
+   if (!(ICHECK || IMAKE) && isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) {
       stdOut("Start scanning the list from '" . DOUBLECHECK_FILE . "'.\n");
       $lines = file(DOUBLECHECK_FILE);
       for ($i = 0, $size = count($lines); $i < $size; $i++) {
@@ -3451,20 +3502,51 @@ if (defined('SCAN_FILE')) {
       stdOut("Start scanning '" . ROOT_PATH . "'.\n");
       
       file_exists(QUEUE_FILENAME) && unlink(QUEUE_FILENAME);
+      if (ICHECK || IMAKE) {
+      // INTEGRITY CHECK
+        IMAKE and unlink(INTEGRITY_DB_FILE);
+        ICHECK and load_integrity_db();
+        QCR_IntegrityCheck(ROOT_PATH);
+        stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+        if (IMAKE) exit(0);
+        if (ICHECK) {
+            $i = $g_Counter;
+            $g_CRC = 0;
+            $changes = array();
+            $ref =& $g_IntegrityDB;
+            foreach ($g_IntegrityDB as $l_FileName => $type) {
+                unset($g_IntegrityDB[$l_FileName]);
+                $l_Ext2 = substr(strstr(basename($l_FileName), '.'), 1);
+                if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
+                    continue;
+                }
+                for ($dr = 0; $dr < count($g_DirIgnoreList); $dr++) {
+                    if (($g_DirIgnoreList[$dr] != '') && preg_match('#' . $g_DirIgnorceList[$dr] . '#', $l_FileName, $l_Found)) {
+                        continue 2;
+                    }
+                }
+                $type = in_array($type, array('added', 'modified')) ? $type : 'deleted';
+                $type .= substr($l_FileName, -1) == '/' ? 'Dirs' : 'Files';
+                $changes[$type][] = ++$i;
+                AddResult($l_FileName, $i);
+            }
+            $g_FoundTotalFiles = count($changes['addedFiles']) + count($changes['modifiedFiles']);
+            stdOut("Found changes " . count($changes['modifiedFiles']) . " files and added " . count($changes['addedFiles']) . " files.");
+        }
+        
+      } else {
       QCR_ScanDirectories(ROOT_PATH);
+      stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
+      }
 
+      QCR_Debug();
+      stdOut(str_repeat(' ', 160),false);
+      QCR_GoScan(0);
+      unlink(QUEUE_FILENAME);
    }
 }
 
-//$g_FoundTotalFiles = count($g_Structure['n']);
-//$g_FoundTotalFiles = $g_Counter - $g_FoundTotalDirs;
-
 QCR_Debug();
-
-stdOut("Found $g_FoundTotalFiles files in $g_FoundTotalDirs directories.");
-stdOut(str_repeat(' ', 160),false);
-
-//$g_FoundTotalFiles = count($g_Structure['n']);
 
 // detect version CMS
 $l_CmsListDetector = new CmsVersionDetector('.');
@@ -3473,10 +3555,7 @@ for ($tt = 0; $tt < $l_CmsDetectedNum; $tt++) {
     $g_CMS[] = $l_CmsListDetector->getCmsName($tt) . ' v' . $l_CmsListDetector->getCmsVersion($tt);
 }
 
-if (!(ONE_PASS || defined('SCAN_FILE') || (isset($options['with-2check']) && file_exists(DOUBLECHECK_FILE)) )) {
-QCR_GoScan(0);
-unlink(QUEUE_FILENAME);
-}
+
 QCR_Debug();
 
 
@@ -3502,6 +3581,7 @@ stdOut("\nBuilding report [ mode = " . AI_EXPERT . " ]\n");
 
 ////////////////////////////////////////////////////////////////////////////
 // save 
+if (!(ICHECK || IMAKE))
 if (isset($options['with-2check']) || isset($options['quarantine']))
 if ((count($g_CriticalPHP) > 0) OR (count($g_CriticalJS) > 0) OR (count($g_Base64) > 0) OR 
    (count($g_Iframer) > 0) OR  (count($g_UnixExec))) 
@@ -3734,8 +3814,11 @@ if (count($g_SymLinks) > 0) {
 }
 
 ////////////////////////////////////
+$l_WarningsNum = count($g_HeuristicDetected) + count($g_HiddenFiles) + count($g_BigFiles) + count($g_PHPCodeInside) + count($g_AdwareList) + count($g_EmptyLink) + count($g_Doorway) + (count($g_WarningPHP[0]) + count($g_WarningPHP[1]) + count($g_SkippedFolders) + count(g_CMS));
 
-$l_Result .= "<div style=\"margin-top: 20px\" class=\"title\">" . AI_STR_026 . "</div>";
+if ($l_WarningsNum > 0) {
+	$l_Result .= "<div style=\"margin-top: 20px\" class=\"title\">" . AI_STR_026 . "</div>";
+}
 
 stdOut("Building list of heuristics " . count($g_HeuristicDetected));
 
@@ -3854,6 +3937,46 @@ if (count($g_SkippedFolders) > 0) {
       $l_Result .= implode("<br>", $g_CMS);
       $l_Result .= "</div>";
  }
+
+
+if (ICHECK) {
+	$l_Result .= "<div style=\"margin-top: 20px\" class=\"title\">" . AI_STR_087 . "</div>";
+	
+    stdOut("Building list of added files " . count($changes['addedFiles']));
+    if (count($changes['addedFiles']) > 0) {
+      $l_Result .= '<div class="note_int">' . AI_STR_082 . ' (' . count($changes['addedFiles']) . ')</div><div class="intitem">';
+      $l_Result .= printList($changes['addedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of modified files " . count($changes['modifiedFiles']));
+    if (count($changes['modifiedFiles']) > 0) {
+      $l_Result .= '<div class="note_int">' . AI_STR_083 . ' (' . count($changes['modifiedFiles']) . ')</div><div class="intitem">';
+      $l_Result .= printList($changes['modifiedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of deleted files " . count($changes['deletedFiles']));
+    if (count($changes['deletedFiles']) > 0) {
+      $l_Result .= '<div class="note_int">' . AI_STR_084 . ' (' . count($changes['deletedFiles']) . ')</div><div class="intitem">';
+      $l_Result .= printList($changes['deletedFiles']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of added dirs " . count($changes['addedDirs']));
+    if (count($changes['addedDirs']) > 0) {
+      $l_Result .= '<div class="note_int">' . AI_STR_085 . ' (' . count($changes['addedDirs']) . ')</div><div class="intitem">';
+      $l_Result .= printList($changes['addedDirs']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+
+    stdOut("Building list of deleted dirs " . count($changes['deletedDirs']));
+    if (count($changes['deletedDirs']) > 0) {
+      $l_Result .= '<div class="note_int">' . AI_STR_086 . ' (' . count($changes['deletedDirs']) . ')</div><div class="intitem">';
+      $l_Result .= printList($changes['deletedDirs']);
+      $l_Result .= "</div>" . PHP_EOL;
+    }
+}
 
 if (!isCli()) {
    $l_Result .= QCR_ExtractInfo($l_PhpInfoBody[1]);
@@ -4105,6 +4228,204 @@ function Quarantine()
 	stdOut("\nCreate archive '" . realpath($archive) . "'.");
 	stdOut("This archive has no password!");
 }
+
+
+
+///////////////////////////////////////////////////////////////////////////
+function QCR_IntegrityCheck($l_RootDir)
+{
+	global $g_Structure, $g_Counter, $g_Doorway, $g_FoundTotalFiles, $g_FoundTotalDirs, 
+			$defaults, $g_SkippedFolders, $g_UrlIgnoreList, $g_DirIgnoreList, $g_UnsafeDirArray, 
+                        $g_UnsafeFilesFound, $g_SymLinks, $g_HiddenFiles, $g_UnixExec, $g_IgnoredExt, $g_SuspiciousFiles;
+	global $g_IntegrityDB, $g_ICheck;
+	static $l_Buffer = '';
+	
+	$l_DirCounter = 0;
+	$l_DoorwayFilesCounter = 0;
+	$l_SourceDirIndex = $g_Counter - 1;
+	
+	QCR_Debug('Check ' . $l_RootDir);
+
+ 	if ($l_DIRH = @opendir($l_RootDir))
+	{
+		while (($l_FileName = readdir($l_DIRH)) !== false)
+		{
+			if ($l_FileName == '.' || $l_FileName == '..') continue;
+
+			$l_FileName = $l_RootDir . DIR_SEPARATOR . $l_FileName;
+
+			$l_Type = filetype($l_FileName);
+			$l_IsDir = ($l_Type == "dir");
+            if ($l_Type == "link") 
+            {
+				$g_SymLinks[] = $l_FileName;
+                continue;
+            } else 
+			if ($l_Type != "file" && (!$l_IsDir)) {
+				$g_UnixExec[] = $l_FileName;
+				continue;
+			}	
+						
+			$l_Ext = substr($l_FileName, strrpos($l_FileName, '.') + 1);
+
+			$l_NeedToScan = true;
+			$l_Ext2 = substr(strstr(basename($l_FileName), '.'), 1);
+			if (in_array(strtolower($l_Ext2), $g_IgnoredExt)) {
+                           $l_NeedToScan = false;
+            }
+			
+			if (getRelativePath($l_FileName) == "./" . INTEGRITY_DB_FILE) $l_NeedToScan = false;
+
+			if ($l_IsDir)
+			{
+				// if folder in ignore list
+				$l_Skip = false;
+				for ($dr = 0; $dr < count($g_DirIgnoreList); $dr++) {
+					if (($g_DirIgnoreList[$dr] != '') &&
+						preg_match('#' . $g_DirIgnoreList[$dr] . '#', $l_FileName, $l_Found)) {
+						$l_Skip = true;
+					}
+				}
+			
+				// skip on ignore
+				if ($l_Skip) {
+					$g_SkippedFolders[] = $l_FileName;
+					continue;
+				}
+				
+				$l_BaseName = basename($l_FileName);
+
+				$l_DirCounter++;
+
+				$g_Counter++;
+				$g_FoundTotalDirs++;
+
+				QCR_IntegrityCheck($l_FileName);
+
+			} else
+			{
+				if ($l_NeedToScan)
+				{
+					$g_FoundTotalFiles++;
+					$g_Counter++;
+				}
+			}
+			
+			if (!$l_NeedToScan) continue;
+
+			if (IMAKE) {
+				write_integrity_db_file($l_FileName);
+				continue;
+			}
+
+			// ICHECK
+			// skip if known and not modified.
+			if (icheck($l_FileName)) continue;
+			
+			$l_Buffer .= getRelativePath($l_FileName);
+			$l_Buffer .= $l_IsDir ? DIR_SEPARATOR . "\n" : "\n";
+
+			if (strlen($l_Buffer) > 32000)
+			{
+				file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file " . QUEUE_FILENAME);
+				$l_Buffer = '';
+			}
+
+		}
+
+		closedir($l_DIRH);
+	}
+	
+	if (($l_RootDir == ROOT_PATH) && !empty($l_Buffer)) {
+		file_put_contents(QUEUE_FILENAME, $l_Buffer, FILE_APPEND) or die("Cannot write to file ".QUEUE_FILENAME);
+		$l_Buffer = '';
+	}
+
+	if (($l_RootDir == ROOT_PATH)) {
+		write_integrity_db_file();
+	}
+
+}
+
+
+function getRelativePath($l_FileName) {
+	return "./" . substr($l_FileName, strlen(ROOT_PATH) + 1) . (is_dir($l_FileName) ? DIR_SEPARATOR : '');
+}
+/**
+ *
+ * @return true if known and not modified
+ */
+function icheck($l_FileName) {
+	global $g_IntegrityDB, $g_ICheck;
+	static $l_Buffer = '';
+	static $l_status = array( 'modified' => 'modified', 'added' => 'added' );
+    
+	$l_RelativePath = getRelativePath($l_FileName);
+	$l_known = isset($g_IntegrityDB[$l_RelativePath]);
+
+	if (is_dir($l_FileName)) {
+		if ( $l_known ) {
+			unset($g_IntegrityDB[$l_RelativePath]);
+		} else {
+			$g_IntegrityDB[$l_RelativePath] =& $l_status['added'];
+		}
+		return $l_known;
+	}
+
+	if ($l_known == false) {
+		$g_IntegrityDB[$l_RelativePath] =& $l_status['added'];
+		return false;
+	}
+
+	$hash = is_file($l_FileName) ? hash_file('sha1', $l_FileName) : '';
+	
+	if ($g_IntegrityDB[$l_RelativePath] != $hash) {
+		$g_IntegrityDB[$l_RelativePath] =& $l_status['modified'];
+		return false;
+	}
+
+	unset($g_IntegrityDB[$l_RelativePath]);
+	return true;
+}
+
+function write_integrity_db_file($l_FileName = '') {
+	static $l_Buffer = '';
+
+	if (empty($l_FileName)) {
+		empty($l_Buffer) or file_put_contents('compress.zlib://' . INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file " . INTEGRITY_DB_FILE);
+		$l_Buffer = '';
+		return;
+	}
+
+	$l_RelativePath = getRelativePath($l_FileName);
+		
+	$hash = is_file($l_FileName) ? hash_file('sha1', $l_FileName) : '';
+
+	$l_Buffer .= "$l_RelativePath|$hash\n";
+	
+	if (strlen($l_Buffer) > 32000)
+	{
+		file_put_contents('compress.zlib://' . INTEGRITY_DB_FILE, $l_Buffer, FILE_APPEND) or die("Cannot write to file " . INTEGRITY_DB_FILE);
+		$l_Buffer = '';
+	}
+}
+
+function load_integrity_db() {
+	global $g_IntegrityDB;
+	file_exists(INTEGRITY_DB_FILE) or die('Not found ' . INTEGRITY_DB_FILE);
+
+	$s_file = new SplFileObject('compress.zlib://'.INTEGRITY_DB_FILE);
+	$s_file->setFlags(SplFileObject::READ_AHEAD | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+
+	foreach ($s_file as $line) {
+		$i = strrpos($line, '|');
+		if (!$i) continue;
+		$g_IntegrityDB[substr($line, 0, $i)] = substr($line, $i+1);
+	}
+
+	$s_file = null;
+}
+
 
 function OptimizeSignatures()
 {
