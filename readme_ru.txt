@@ -18,6 +18,9 @@ define('AI_EXPERT_MODE', 2);
 красным в отчете.
 
 
+≈сли вы запускаете сканер в режиме командной строки, то номер режима можно задать через параметр --mode.
+php ai-bolit.php --mode=2 - это проверка в параноидальном режиме
+
 
 
 √арантированно рабочий вариант проверки - AI-BOLIT дл€ Windows
@@ -41,11 +44,11 @@ define('PASS', 'MyPass234');
 
 3. скопировать из папки know_files файлы, которые соответствуют вашей cms (если таких файлов нет, то ничего страшного)
 
-4. открыть в браузере http://ваш_сайт/ai-bolit.php?p=MyPass234 и ждать отчета
+4. открыть в браузере https://ваш_сайт/ai-bolit.php?p=MyPass234 и ждать отчета
 
 5. после отображени€ отчета удалить файлы от AI-BOLIT и сам скрипт с сайта
 
-≈сли что-то пошло не так, читаем FAQ: http://revisium.com/ai/faq.php
+≈сли что-то пошло не так, читаем FAQ: https://revisium.com/ai/faq.php
 
 
 
@@ -67,7 +70,7 @@ define('PASS', 'MyPass234');
 6. скопировать с сервера файл AI-BOLIT-REPORT-<дата>-<врем€>.html
 
 
-≈сли что-то пошло не так, посмотрите раздел часто-задаваемых вопросов: http://revisium.com/ai/faq.php
+≈сли что-то пошло не так, посмотрите раздел часто-задаваемых вопросов: https://revisium.com/ai/faq.php
 
 
 ---
@@ -78,10 +81,10 @@ ai@revisium.com. ”слуга "лечение + защита сайта" платна€.
 ”дачи вам!
 
 
-http://www.revisium.com/ai/ - официальна€ страница AI-BOLIT
-http://www.revisium.com - мы лечим и защищаем сайты от взлома
-http://www.revisium.com/blog/ - наш блог
+https://revisium.com/ai/ - официальна€ страница AI-BOLIT
+https://revisium.com - мы лечим и защищаем сайты от взлома
+https://revisium.com/blog/ - наш блог
 http://vk.com/siteprotect - группа по безопасности сайтов
 http://twitter.com/revisium - наш твиттер @revisium
-https://www.facebook.com/revisium - наша страница в Facebook
+https://www.facebook.com/Revisium - наша страница в Facebook
 
