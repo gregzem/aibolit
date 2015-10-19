@@ -841,7 +841,7 @@ if (version_compare(phpversion(), '5.3.1', '<')) {
   echo "#####################################################\n";
 }
 
-define('AI_VERSION', '20151014_BEGET');
+define('AI_VERSION', '20151019_BEGET');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -1868,6 +1868,10 @@ function needIgnore($par_FN, $par_CRC) {
   return false;
 }
 
+function makeSafeFn($par_Str) {
+  return htmlspecialchars($par_Str, ENT_SUBSTITUTE | ENT_QUOTES);
+}
+
 ///////////////////////////////////////////////////////////////////////////
 function printList($par_List, $par_Details = null, $par_NeedIgnore = false, $par_SigId = null, $par_TableName = null) {
   global $g_Structure, $g_NoPrefix, $g_AddPrefix;
@@ -1930,9 +1934,9 @@ function printList($par_List, $par_Details = null, $par_NeedIgnore = false, $par
 	 if (is_file($g_Structure['n'][$l_Pos])) {
 //		$l_Result .= '<td><div class="it"><a class="it" target="_blank" href="'. $defaults['site_url'] . 'ai-bolit.php?fn=' .
 //	              $g_Structure['n'][$l_Pos] . '&ph=' . realCRC(PASS) . '&c=' . $g_Structure['crc'][$l_Pos] . '">' . $g_Structure['n'][$l_Pos] . '</a></div>' . $l_Body . '</td>';
-		$l_Result .= '<td><div class="it"><a class="it">' . $g_AddPrefix . str_replace($g_NoPrefix, '', $g_Structure['n'][$l_Pos]) . '</a></div>' . $l_Body . '</td>';
+		$l_Result .= '<td><div class="it"><a class="it">' . makeSafeFn($g_AddPrefix . str_replace($g_NoPrefix, '', $g_Structure['n'][$l_Pos])) . '</a></div>' . $l_Body . '</td>';
 	 } else {
-		$l_Result .= '<td><div class="it"><a class="it">' . $g_AddPrefix . str_replace($g_NoPrefix, '', $g_Structure['n'][$par_List[$i]]) . '</a></div></td>';
+		$l_Result .= '<td><div class="it"><a class="it">' . makeSafeFn($g_AddPrefix . str_replace($g_NoPrefix, '', $g_Structure['n'][$par_List[$i]])) . '</a></div></td>';
 	 }
 	 
      $l_Result .= '<td align=center><div class="ctd">' . $l_Creat . '</div></td>';
@@ -2224,7 +2228,7 @@ function getFragment($par_Content, $par_Pos) {
            '__AI_MARKER__' . 
            substr($par_Content, $par_Pos, $l_RightPos - $par_Pos - 1);
 
-  $l_Res = htmlspecialchars(UnwrapObfu($l_Res), ENT_COMPAT|ENT_IGNORE);
+  $l_Res = makeSafeFn(UnwrapObfu($l_Res));
   $l_Res = str_replace('~', '·', $l_Res);
 
   return $l_Res;
@@ -3634,7 +3638,7 @@ stdOut("Building list of vulnerable scripts " . count($g_Vulnerable));
 if (count($g_Vulnerable) > 0) {
     $l_Result .= '<div class="note_vir">' . AI_STR_081 . ' (' . count($g_Vulnerable) . ')</div><div class="crit">';
  	foreach ($g_Vulnerable as $l_Item) {
-	    $l_Result .= '<li>' . $g_Structure['n'][$l_Item['ndx']] . ' - ' . $l_Item['id'] . '</li>';
+	    $l_Result .= '<li>' . makeSafeFn($g_Structure['n'][$l_Item['ndx']]) . ' - ' . $l_Item['id'] . '</li>';
 		$l_PlainResult .= 'VULNERABILITY: ' . $g_Structure['n'][$l_Item['ndx']] . ' - ' . $l_Item['id'] . "\n";
  	}
 	
@@ -3680,7 +3684,7 @@ stdOut("Building list of unix executables and odd scripts " . count($g_UnixExec)
 
 if (count($g_UnixExec) > 0) {
   $l_Result .= '<div class="note_vir">' . AI_STR_019 . ' (' . count($g_UnixExec) . ')</div><div class="crit">';
-  $l_Result .= implode("<br>", $g_UnixExec);
+  $l_Result .= implode("<br>", makeSafeFn($g_UnixExec));
   $l_PlainResult .= implode("\n", $g_UnixExec);
   $l_Result .= "</div>" . PHP_EOL;
 
@@ -3730,7 +3734,7 @@ stdOut("Building list of symlinks " . count($g_SymLinks));
 
 if (count($g_SymLinks) > 0) {
   $l_Result .= '<div class="note_vir">' . AI_STR_022 . ' (' . count($g_SymLinks) . ')</div><div class="crit">';
-  $l_Result .= implode("<br>", $g_SymLinks);
+  $l_Result .= implode("<br>", makeSafeFn($g_SymLinks));
   $l_Result .= "</div><div class=\"spacer\"></div>";
 }
 
@@ -3743,7 +3747,7 @@ stdOut("Building list of heuristics " . count($g_HeuristicDetected));
 if (count($g_HeuristicDetected) > 0) {
   $l_Result .= '<div class="note_warn">' . AI_STR_052 . ' (' . count($g_HeuristicDetected) . ')</div><div class="warn">';
   for ($i = 0; $i < count($g_HeuristicDetected); $i++) {
-	   $l_Result .= '<li>' . $g_Structure['n'][$g_HeuristicDetected[$i]] . ' (' . get_descr_heur($g_HeuristicType[$i]) . ')</li>';
+	   $l_Result .= '<li>' . makeSafeFn($g_Structure['n'][$g_HeuristicDetected[$i]]) . ' (' . get_descr_heur($g_HeuristicType[$i]) . ')</li>';
   }
   
   $l_Result .= '</ul></div><div class=\"spacer\"></div>' . PHP_EOL;
@@ -3754,7 +3758,7 @@ if (count($g_HeuristicDetected) > 0) {
 stdOut("Building list of hidden files " . count($g_HiddenFiles));
 if (count($g_HiddenFiles) > 0) {
   $l_Result .= '<div class="note_warn">' . AI_STR_023 . ' (' . count($g_HiddenFiles) . ')</div><div class="warn">';
-  $l_Result .= implode("<br>", $g_HiddenFiles);
+  $l_Result .= implode("<br>", makeSafeFn($g_HiddenFiles));
   $l_Result .= "</div><div class=\"spacer\"></div>" . PHP_EOL;
 
 }
@@ -3807,7 +3811,7 @@ if (count($g_EmptyLink) > 0) {
   for ($i = 0; $i < count($g_EmptyLink); $i++) {
 	$l_Idx = $g_EmptyLink[$i];
     for ($j = 0; $j < count($g_EmptyLinkSrc[$l_Idx]); $j++) {
-      $l_Result .= '<span class="details">' . $g_Structure['n'][$g_EmptyLink[$i]] . ' &rarr; ' . htmlspecialchars($g_EmptyLinkSrc[$l_Idx][$j]) . '</span><br/>';
+      $l_Result .= '<span class="details">' . makeSafeFn($g_Structure['n'][$g_EmptyLink[$i]]) . ' &rarr; ' . htmlspecialchars($g_EmptyLinkSrc[$l_Idx][$j]) . '</span><br/>';
 	}
   }
 
@@ -3846,13 +3850,13 @@ if (($defaults['report_mask'] & REPORT_MASK_SUSP) == REPORT_MASK_SUSP) {
 stdOut("Building list of skipped dirs " . count($g_SkippedFolders));
 if (count($g_SkippedFolders) > 0) {
   $l_Result .= '<div class="note_warn">' . AI_STR_036 . '</div><div class="warn">';
-     $l_Result .= implode("<br>", $g_SkippedFolders);
+     $l_Result .= implode("<br>", makeSafeFn($g_SkippedFolders));
      $l_Result .= "</div>" . PHP_EOL;
  }
 */
  if (count($g_CMS) > 0) {
       $l_Result .= "<div class=\"note_warn\">" . AI_STR_037 . "<br/>";
-      $l_Result .= implode("<br>", $g_CMS);
+      $l_Result .= implode("<br>", makeSafeFn($g_CMS));
       $l_Result .= "</div>";
  }
 
