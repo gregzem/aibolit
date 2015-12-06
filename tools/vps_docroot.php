@@ -61,6 +61,7 @@ scan_configs('/usr/local/nginx/conf', true);
 scan_configs('/etc/nginx', true);
 scan_configs('/usr/local/etc/nginx', true);
 scan_configs('/usr/local/directadmin/data', true);
+scan_configs('/home/admin/conf/', true);
 
 $result_list = array_merge(array_diff(array_keys($found_dirs), $exclude_dirs), $include_dirs);
 
