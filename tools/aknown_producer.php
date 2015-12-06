@@ -4,6 +4,9 @@
 // Revisium, Greg Zemskov, ai@revisium.com
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+error_reporting(0);
+ini_set('display_errors', 0);
+
 define('CRC32_LIMIT', pow(2, 31) - 1);
 define('CRC32_DIFF', CRC32_LIMIT * 2 -2);
 
