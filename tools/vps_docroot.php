@@ -10,7 +10,8 @@ $found_dirs = array();
 // exclude from scan list
 $exclude_dirs = array(
     '/usr/share', 
-    '/var/www'
+    '/var/www',
+	'/usr'
                 );
 
 // add extra dirs to scan list
@@ -39,7 +40,7 @@ function scan_configs($path, $recurs) {
 				scan_configs($file, true);
 			}
 
-			if (is_file($file)) {
+			if (is_file($file) && filesize($file) < 5000000) {
                            $content = file_get_contents($file);
                            if ((preg_match_all('~DocumentRoot\s+[\'"]?(/[^\s\'"]+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
 						   	   (preg_match_all('~DocumentRoot\s+(/.+)~mi', $content, $out, PREG_PATTERN_ORDER)) ||
@@ -61,6 +62,7 @@ scan_configs('/usr/local/nginx/conf', true);
 scan_configs('/etc/nginx', true);
 scan_configs('/usr/local/etc/nginx', true);
 scan_configs('/usr/local/directadmin/data', true);
+scan_configs('/home/admin/conf/', true);
 
 $result_list = array_merge(array_diff(array_keys($found_dirs), $exclude_dirs), $include_dirs);
 
