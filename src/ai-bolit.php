@@ -3306,35 +3306,6 @@ function CriticalPHP($l_FN, $l_Index, $l_Content, &$l_Pos, &$l_SigId)
 	  return false;
   }
 
-  $l_Content_lo = strtolower($l_Content);
-
-  foreach ($g_DBShe as $l_Item) {
-    $l_Pos = strpos($l_Content_lo, $l_Item);
-    if ($l_Pos !== false) {
-       $l_SigId = myCheckSum($l_Item);
-
-       if (DEBUG_MODE) {
-          echo "CRIT 4: $l_FN matched [$l_Item] in $l_Pos\n";
-       }
-
-       return true;
-    }
-  }
-
-if (AI_EXPERT > 0) {
-  foreach ($gX_DBShe as $l_Item) {
-    $l_Pos = strpos($l_Content_lo, $l_Item);
-    if ($l_Pos !== false) {
-       $l_SigId = myCheckSum($l_Item);
-
-       if (DEBUG_MODE) {
-          echo "CRIT 5: $l_FN matched [$l_Item] in $l_Pos\n";
-       }
-
-       return true;
-    }
-  }
-
   if (AI_EXPERT > 1) {
     if (strpos($l_FN, '.php.') !== false ) {
        $g_Base64[] = $l_Index;
@@ -3404,6 +3375,35 @@ if (AI_EXPERT > 0) {
    if (pcre_error($l_FN, $l_Index)) {  }
   }
 }
+
+  $l_Content_lo = strtolower($l_Content);
+
+  foreach ($g_DBShe as $l_Item) {
+    $l_Pos = strpos($l_Content_lo, $l_Item);
+    if ($l_Pos !== false) {
+       $l_SigId = myCheckSum($l_Item);
+
+       if (DEBUG_MODE) {
+          echo "CRIT 4: $l_FN matched [$l_Item] in $l_Pos\n";
+       }
+
+       return true;
+    }
+  }
+
+if (AI_EXPERT > 0) {
+  foreach ($gX_DBShe as $l_Item) {
+    $l_Pos = strpos($l_Content_lo, $l_Item);
+    if ($l_Pos !== false) {
+       $l_SigId = myCheckSum($l_Item);
+
+       if (DEBUG_MODE) {
+          echo "CRIT 5: $l_FN matched [$l_Item] in $l_Pos\n";
+       }
+
+       return true;
+    }
+  }
 
   if ((strpos($l_FN, '.ph') !== false) && (AI_EXPERT > 1)) {
      // for php only
