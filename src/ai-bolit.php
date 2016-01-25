@@ -4623,11 +4623,11 @@ function OptimizeSignatures()
 	$count = count($g_FlexDBShe);
 
 	for ($i = 0; $i < $count; $i++) {
-		if ($g_FlexDBShe[$i] == 'http://.+?/.+?\.php\?a=\d+&c=[a-zA-Z0-9_]+?&s=') $g_FlexDBShe[$i] = 'http://[^?\s]++(?<=\.php)\?a=\d+&c=[a-zA-Z0-9_]+?&s=';
 		if ($g_FlexDBShe[$i] == '[a-zA-Z0-9_]+?\(\s*[a-zA-Z0-9_]+?=\s*\)') $g_FlexDBShe[$i] = '\((?<=[a-zA-Z0-9_].)\s*[a-zA-Z0-9_]++=\s*\)';
 		if ($g_FlexDBShe[$i] == '([^\?\s])\({0,1}\.[\+\*]\){0,1}\2[a-z]*e') $g_FlexDBShe[$i] = '(?J)\.[+*](?<=(?<d>[^\?\s])\(..|(?<d>[^\?\s])..)\)?\g{d}[a-z]*e';
 		if ($g_FlexDBShe[$i] == '$[a-zA-Z0-9_]\{\d+\}\s*\.$[a-zA-Z0-9_]\{\d+\}\s*\.$[a-zA-Z0-9_]\{\d+\}\s*\.') $g_FlexDBShe[$i] = '\$[a-zA-Z0-9_]\{\d+\}\s*\.\$[a-zA-Z0-9_]\{\d+\}\s*\.\$[a-zA-Z0-9_]\{\d+\}\s*\.';
 
+		$g_FlexDBShe[$i] = str_replace('http://.+?/.+?\.php\?a', 'http://[^?\s]++(?<=\.php)\?a', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = preg_replace('~\[a-zA-Z0-9_\]\+\K\?~', '+', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = preg_replace('~^\\\\[d]\+&@~', '&@(?<=\d..)', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = str_replace('\s*[\'"]{0,1}.+?[\'"]{0,1}\s*', '.+?', $g_FlexDBShe[$i]);
@@ -4642,7 +4642,7 @@ function OptimizeSignatures()
 	optSig($g_AdwareSig);
 	optSig($g_PhishingSig);
         optSig($g_SusDB);
-        optSig($g_SusDBPrio);
+        //optSig($g_SusDBPrio);
         //optSig($g_ExceptFlex);
 
         // convert exception rules
@@ -4659,6 +4659,14 @@ function OptimizeSignatures()
 function optSig(&$sigs)
 {
 	optSigCheck($sigs);
+
+	$tmp = array();
+	foreach ($sigs as $i => $s) {
+		if (strpos($s, '.+') !== false || strpos($s, '.*') !== false) {
+			unset($sigs[$i]);
+			$tmp[] = $s;
+		}
+	}
 	
 	usort($sigs, 'strcasecmp');
 	$txt = implode("\n", $sigs);
@@ -4667,7 +4675,7 @@ function optSig(&$sigs)
 		$txt = preg_replace_callback('#^((?>(?:\\\\.|\\[.+?\\]|[^(\n]|\((?:\\\\.|[^)(\n])++\))(?:[*?+]\+?|)){' . $i . ',}).*(?:\\n\\1(?![{?*+]).+)+#im', 'optMergePrefixes', $txt);
 	}
 
-	$sigs = explode("\n", $txt);
+	$sigs = array_merge(explode("\n", $txt), $tmp);
 	
 	optSigCheck($sigs);
 }
