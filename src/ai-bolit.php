@@ -876,7 +876,7 @@ if (!(function_exists("file_put_contents") && is_callable("file_put_contents")))
     exit;
 }
                               
-define('AI_VERSION', '20160124');
+define('AI_VERSION', '20160202');
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -2042,7 +2042,7 @@ function printList($par_List, $par_Details = null, $par_NeedIgnore = false, $par
      $l_Result .= '<td align=center><div class="ctd">' . $l_Creat . '</div></td>';
      $l_Result .= '<td align=center><div class="ctd">' . $l_Modif . '</div></td>';
      $l_Result .= '<td align=center><div class="ctd">' . $l_Size . '</div></td>';
-     $l_Result .= '<td class="hidd"><div class="hidd">-</div></td>';
+     $l_Result .= '<td class="hidd"><div class="hidd">' . $g_Structure['crc'][$l_Pos] . '</div></td>';
      $l_Result .= '<td class="hidd"><div class="hidd">' . $g_Structure['c'][$l_Pos] . '</div></td>';
      $l_Result .= '<td class="hidd"><div class="hidd">' . $g_Structure['m'][$l_Pos] . '</div></td>';
      $l_Result .= '<td class="hidd"><div class="hidd">' . $l_SigId . '</div></td>';
@@ -2710,13 +2710,8 @@ function QCR_ScanFile($l_Filename, $i = 0)
 				        return;
                 		}
 
-				$g_CRC = realCRC($l_Content);
+				$g_CRC = _hash_($l_Unwrapped);
 
-                                $l_KnownCRC = $g_CRC + realCRC(basename($l_Filename));
-                                if ( isset($g_KnownList[$l_KnownCRC]) ) {
-	        		   //printProgress(++$_files_and_ignored, $l_Filename);
-                                   return;
-                                }
 
 				$l_UnicodeContent = detect_utf_encoding($l_Content);
 				//$l_Unwrapped = $l_Content;
@@ -3740,6 +3735,30 @@ if (defined('SCAN_FILE')) {
 
 QCR_Debug();
 
+// whitelist
+
+$list = check_whitelist($g_Structure['crc']);
+
+foreach (array('g_CriticalPHP', 'g_CriticalJS', 'g_Iframer', 'g_Base64', 'g_Phishing', 'g_AdwareList', 'g_Redirect') as $p) {
+	if (empty($$p)) continue;
+	
+	$p_Fragment = $p . "Fragment";
+	$p_Sig = $p . "Sig";
+
+	$count = count($$p);
+	for ($i = 0; $i < $count; $i++) {
+		$id = "{${$p}[$i]}";
+		if (in_array($g_Structure['crc'][$id], $list)) {
+			unset($GLOBALS[$p][$i]);
+			unset($GLOBALS[$p_Sig][$i]);
+			unset($GLOBALS[$p_Fragment][$i]);
+		}
+	}
+
+	$$p = array_values($$p);
+	$$p_Fragment = array_values($$p_Fragment);
+	if (!empty($$p_Sig)) $$p_Sig = array_values($$p_Sig);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -4623,11 +4642,11 @@ function OptimizeSignatures()
 	$count = count($g_FlexDBShe);
 
 	for ($i = 0; $i < $count; $i++) {
-		if ($g_FlexDBShe[$i] == 'http://.+?/.+?\.php\?a=\d+&c=[a-zA-Z0-9_]+?&s=') $g_FlexDBShe[$i] = 'http://[^?\s]++(?<=\.php)\?a=\d+&c=[a-zA-Z0-9_]+?&s=';
 		if ($g_FlexDBShe[$i] == '[a-zA-Z0-9_]+?\(\s*[a-zA-Z0-9_]+?=\s*\)') $g_FlexDBShe[$i] = '\((?<=[a-zA-Z0-9_].)\s*[a-zA-Z0-9_]++=\s*\)';
 		if ($g_FlexDBShe[$i] == '([^\?\s])\({0,1}\.[\+\*]\){0,1}\2[a-z]*e') $g_FlexDBShe[$i] = '(?J)\.[+*](?<=(?<d>[^\?\s])\(..|(?<d>[^\?\s])..)\)?\g{d}[a-z]*e';
 		if ($g_FlexDBShe[$i] == '$[a-zA-Z0-9_]\{\d+\}\s*\.$[a-zA-Z0-9_]\{\d+\}\s*\.$[a-zA-Z0-9_]\{\d+\}\s*\.') $g_FlexDBShe[$i] = '\$[a-zA-Z0-9_]\{\d+\}\s*\.\$[a-zA-Z0-9_]\{\d+\}\s*\.\$[a-zA-Z0-9_]\{\d+\}\s*\.';
 
+		$g_FlexDBShe[$i] = str_replace('http://.+?/.+?\.php\?a', 'http://[^?\s]++(?<=\.php)\?a', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = preg_replace('~\[a-zA-Z0-9_\]\+\K\?~', '+', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = preg_replace('~^\\\\[d]\+&@~', '&@(?<=\d..)', $g_FlexDBShe[$i]);
 		$g_FlexDBShe[$i] = str_replace('\s*[\'"]{0,1}.+?[\'"]{0,1}\s*', '.+?', $g_FlexDBShe[$i]);
@@ -4642,7 +4661,7 @@ function OptimizeSignatures()
 	optSig($g_AdwareSig);
 	optSig($g_PhishingSig);
         optSig($g_SusDB);
-        optSig($g_SusDBPrio);
+        //optSig($g_SusDBPrio);
         //optSig($g_ExceptFlex);
 
         // convert exception rules
@@ -4659,6 +4678,14 @@ function OptimizeSignatures()
 function optSig(&$sigs)
 {
 	optSigCheck($sigs);
+
+	$tmp = array();
+	foreach ($sigs as $i => $s) {
+		if (strpos($s, '.+') !== false || strpos($s, '.*') !== false) {
+			unset($sigs[$i]);
+			$tmp[] = $s;
+		}
+	}
 	
 	usort($sigs, 'strcasecmp');
 	$txt = implode("\n", $sigs);
@@ -4667,7 +4694,7 @@ function optSig(&$sigs)
 		$txt = preg_replace_callback('#^((?>(?:\\\\.|\\[.+?\\]|[^(\n]|\((?:\\\\.|[^)(\n])++\))(?:[*?+]\+?|)){' . $i . ',}).*(?:\\n\\1(?![{?*+]).+)+#im', 'optMergePrefixes', $txt);
 	}
 
-	$sigs = explode("\n", $txt);
+	$sigs = array_merge(explode("\n", $txt), $tmp);
 	
 	optSigCheck($sigs);
 }
@@ -4702,4 +4729,92 @@ function optSigCheck(&$sigs)
 	}
 	
 	return $result;
+}
+
+
+function _hash_($text)
+{
+	static $r;
+	
+	if (empty($r)) {
+		for ($i = 0; $i < 256; $i++) {
+			if ($i < 33 OR $i > 127 ) $r[chr($i)] = '';
+		}
+	}
+
+	return sha1(strtr($text, $r));
+}
+
+function check_whitelist($list) 
+{
+	if (empty($list)) return array();
+	
+	$file = dirname(__FILE__) . '/AIBOLIT-WHITELIST.db';
+	
+	sort($list);
+
+	$hash = reset($list);
+	
+	$fp = @fopen($file, 'rb');
+	
+	if (false === $fp) return array();
+	
+	$header = unpack('V256', fread($fp, 1024));
+	
+	$result = array();
+	
+	foreach ($header as $chunk_id => $chunk_size) {
+		if ($chunk_size > 0) {
+			$str = fread($fp, $chunk_size);
+			
+			do {
+				$raw = pack("H*", $hash);
+				$id = ord($raw[0]) + 1;
+				
+				if ($chunk_id == $id AND binarySearch($str, $raw)) {
+					$result[] = $hash;
+				}
+				
+			} while ($chunk_id >= $id AND $hash = next($list));
+			
+			if ($hash === false) break;
+		}
+	}
+	
+	fclose($fp);
+
+	return $result;
+}
+
+
+function binarySearch($str, $item)
+{
+	$item_size = strlen($item);
+	
+	if ( $item_size == 0 ) return false;
+	
+	$first = 0;
+
+	$last = floor(strlen($str)/$item_size);
+	
+	/* Если просматриваемый участок непустой, first < last */
+	while ($first < $last) {
+		$mid = $first + (($last - $first) >> 1);
+		$b = substr($str, $mid * $item_size, $item_size);
+		if (strcmp($item, $b) <= 0)
+			$last = $mid;
+		else
+			$first = $mid + 1;
+	}
+
+	$b = substr($str, $last * $item_size, $item_size);
+	if ($b == $item) {
+        /* Искомый элемент найден. last - искомый индекс */
+		return true;
+	} else {
+        /* Искомый элемент не найден. Но если вам вдруг надо его
+         * вставить со сдвигом, то его место - last.
+         */
+		return false;
+	}
 }
