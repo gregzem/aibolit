@@ -2,8 +2,20 @@ ai-bolit.php
 ------------
 
 http://www.revisium.com/aibo/
-audit@revisium.com
+ai@revisium.com
 skype: greg_zemskov
+
+Changes in 20160219
+- fixed issue in whitelisting mechanism. Need to set short_open_tag=on while running ai-bolit (php -d short_open_tag=on ai-bolit.php ...)
+- added new signatures of malware 
+- added new CMSes to whitelist database
+
+Changes in 20160202
+- added new whitelist 
+- added new malware signatures
+- new scanner international version
+
+...
 
 Changes in 20130201
 
