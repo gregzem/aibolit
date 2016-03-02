@@ -3797,6 +3797,8 @@ foreach (array('g_CriticalPHP', 'g_CriticalJS', 'g_Iframer', 'g_Base64', 'g_Phis
 	
 	$p_Fragment = $p . "Fragment";
 	$p_Sig = $p . "Sig";
+	if ($p == 'g_Redirect') $p_Fragment = $p . "PHPFragment";
+	if ($p == 'g_Phishing') $p_Sig = $p . "SigFragment";
 
 	$count = count($$p);
 	for ($i = 0; $i < $count; $i++) {
@@ -4805,7 +4807,7 @@ function check_whitelist($list, &$snum)
 	
 	$file = dirname(__FILE__) . '/AIBOLIT-WHITELIST.db';
 
-	$snum = @filesize($file) / 8;
+	$snum = max(0, @filesize($file) - 1024) / 20;
 	echo "\nLoaded $snum known files\n";
 	
 	sort($list);
