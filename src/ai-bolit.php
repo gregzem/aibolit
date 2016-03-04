@@ -3774,6 +3774,12 @@ if (defined('SCAN_FILE')) {
 
 QCR_Debug();
 
+/* BEGET PATCH TO REDUCE FALSE POSITIVES */
+$g_HeuristicDetected = array();
+$g_Iframer = array();
+$g_Base64 = array();
+/* END */
+
 // whitelist
 
 $snum = 0;
