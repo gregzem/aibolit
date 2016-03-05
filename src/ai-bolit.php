@@ -1548,6 +1548,7 @@ if (isCli())
 		'cmd:',
 		'noprefix:',
 		'addprefix:',
+		'scan:',
 		'one-pass',
 		'quarantine',
 		'with-2check',
@@ -1578,6 +1579,7 @@ Current default path is: {$defaults['path']}
   -d, --delay=INT      delay in milliseconds when scanning files to reduce load on the file system (Default: 1)
   -x, --mode=INT       Set scan mode. 0 - for basic, 1 - for expert and 2 for paranoic.
   -k, --skip=jpg,...   Skip specific extensions. E.g. --skip=jpg,gif,png,xls,pdf
+      --scan=php,...   Scan only specific extensions. E.g. --skip=php,htaccess,js
   -r, --report=PATH/EMAILS
                        Full path to create report or email address to send report to.
                        You can also specify multiple email separated by commas.
@@ -1679,6 +1681,18 @@ HELP;
 	{
 		$defaults['scan_all_files'] = 1;
 	}
+
+	if (isset($options['scan']))
+	{
+		$ext_list = strtolower(trim($options['scan'], " ,\t\n\r\0\x0B"));
+		if ($ext_list != '')
+		{
+			$l_FastCli = true;
+			$g_SensitiveFiles = explode(",", $ext_list);
+			stdOut("Scan extensions: " . $ext_list);
+		}
+	}
+
 
     if (isset($options['cms'])) {
         define('CMS', $options['cms']);
@@ -3783,6 +3797,8 @@ foreach (array('g_CriticalPHP', 'g_CriticalJS', 'g_Iframer', 'g_Base64', 'g_Phis
 	
 	$p_Fragment = $p . "Fragment";
 	$p_Sig = $p . "Sig";
+	if ($p == 'g_Redirect') $p_Fragment = $p . "PHPFragment";
+	if ($p == 'g_Phishing') $p_Sig = $p . "SigFragment";
 
 	$count = count($$p);
 	for ($i = 0; $i < $count; $i++) {
@@ -4791,7 +4807,7 @@ function check_whitelist($list, &$snum)
 	
 	$file = dirname(__FILE__) . '/AIBOLIT-WHITELIST.db';
 
-	$snum = @filesize($file) / 8;
+	$snum = max(0, @filesize($file) - 1024) / 20;
 	echo "\nLoaded $snum known files\n";
 	
 	sort($list);
