@@ -5,6 +5,20 @@ http://www.revisium.com/aibo/
 ai@revisium.com
 skype: greg_zemskov
 
+Changes in 20160312
+- Fixed sorting order in report
+- Added virus signatures and new whitelist files
+
+Changes in 20160305
+- Added new command line argument --scan to scan particular extensions
+- New whitelist approach to filter false-positives. Please ensure that your PHP.ini has short_open_tag=on (or launch scanner with the following command short_open_tag=on (php -d short_open_tag=on ai-bolit.php ...)
+- Added new signatures
+- Minor bugfixes
+
+Changes in 20160227
+- New whitelist approach to filter false-positives. Please ensure that your PHP.ini has short_open_tag=on (or launch scanner with the following command short_open_tag=on (php -d short_open_tag=on ai-bolit.php ...)
+- added new signatures
+
 Changes in 20160219
 - fixed issue in whitelisting mechanism. Need to set short_open_tag=on while running ai-bolit (php -d short_open_tag=on ai-bolit.php ...)
 - added new signatures of malware 
