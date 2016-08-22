@@ -5,6 +5,16 @@ http://www.revisium.com/aibo/
 ai@revisium.com
 skype: greg_zemskov
 
+Changes 20160817
+- Added virus signatures and new whitelist files
+- Some minor report cleanups
+
+Changes in 20160720
+- Added virus signatures and new whitelist files
+
+Changes in 20160701
+- Added virus signatures and new whitelist files
+
 Changes in 20160503
 - Added php7 and pht extensions in mandatory list to scan
 - Added virus signatures and new whitelist files
