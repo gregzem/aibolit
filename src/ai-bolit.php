@@ -54,6 +54,8 @@ define('SMART_SCAN', 0);
 
 define('AI_EXTRA_WARN', 0);
 
+define('QUARANTINE_CREATE_SORTED', 0);
+
 $defaults = array(
 	'path' => dirname(__FILE__),
 	'scan_all_files' => 0, // full scan (rather than just a .js, .php, .html, .htaccess)
@@ -3799,6 +3801,32 @@ foreach (array('g_CriticalPHP', 'g_CriticalJS', 'g_Iframer', 'g_Base64', 'g_Phis
 	$$p = array_values($$p);
 	$$p_Fragment = array_values($$p_Fragment);
 	if (!empty($$p_Sig)) $$p_Sig = array_values($$p_Sig);
+}
+
+
+if (QUARANTINE_CREATE_SORTED)
+{
+	$quarantinePath = REPORT_PATH . DIR_SEPARATOR . 'quarantine';
+	foreach (array('g_CriticalPHP', 'g_CriticalJS', 'g_Phishing') as $p) {
+		if (empty($$p)) continue;
+
+		$p_Sig = $p . "Sig";
+		if ($p == 'g_Phishing') $p_Sig = $p . "SigFragment";
+
+		foreach ($$p as $k => $i) {
+			if (isset($list[$g_Structure['crc'][$i]])) continue;
+			$list[$g_Structure['crc'][$i]] = true;
+			$k = $GLOBALS[$p_Sig][$k];
+			$path = $quarantinePath . DIR_SEPARATOR . $k[0] . DIR_SEPARATOR . $k[1] . DIR_SEPARATOR . $k;
+			@mkdir($path, 0777, true);
+			$path .= DIR_SEPARATOR;
+			$filename = basename($g_Structure['n'][$i]);
+			while (is_file($path . $filename)) {
+				$filename = mt_rand(0, 99) . '-' . $filename;
+			}
+			copy($g_Structure['n'][$i], $path . $filename);
+		}
+	}
 }
 
 
