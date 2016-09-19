@@ -1,5 +1,5 @@
-FROM ubuntu:14.04
-LABEL version="1.0"
+FROM ubuntu:16.04
+LABEL version="1.1"
 
 MAINTAINER Alexey Manikin <alexey@beget.ru>
 
@@ -10,7 +10,7 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  apt-get install -y byobu curl git vim php5 sudo && \
+  apt-get install -y byobu curl git vim php7 sudo && \
   rm -rf /var/lib/apt/lists/*
 
 # Prepare environment
