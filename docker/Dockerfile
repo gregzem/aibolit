@@ -10,7 +10,7 @@ RUN \
   apt-get -y upgrade && \
   apt-get install -y build-essential && \
   apt-get install -y software-properties-common && \
-  apt-get install -y byobu curl git vim php7 sudo && \
+  apt-get install -y byobu curl git vim php7.0 sudo && \
   rm -rf /var/lib/apt/lists/*
 
 # Prepare environment
