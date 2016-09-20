@@ -21,11 +21,14 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E007F6BD
 RUN echo "deb http://ppa.launchpad.net/chazomaticus/minit/ubuntu quantal main" > /etc/apt/sources.list.d/minit.list
 RUN apt-get update && apt-get upgrade -y && apt-get install -y minit # etc.
 
-RUN mkdir -p /home/report && chmod 777 /home/report &&\
-    cd /home/beget &&\
-    git config --global http.sslVerify false &&\
-    git clone -b beget -- https://github.com/AlexeyManikin/aibolit.git &&\
-    chmod 755 /home/beget/aibolit -R &&\
+RUN mkdir -p /home/report && \
+    chmod 777 /home/report && \
+    mkdir -p /home/beget && \
+    chmod 777 /home/beget && \
+    cd /home/beget && \
+    git config --global http.sslVerify false && \
+    git clone -b beget -- https://github.com/AlexeyManikin/aibolit.git && \
+    chmod 755 /home/beget/aibolit -R && \
     mkdir /home/beget/site
 
 ADD init.sh /etc/minit/startup
