@@ -4765,43 +4765,140 @@ function optSig(&$sigs)
 	
 	$fix = array(
 		'~^\\\\[d]\+&@~' => '&@(?<=\d..)',
-		'~^((\[\'"\]|\\\\s|@)(\{0,1\}\.?|[?*]))+~' => ''
+		'~^((\[\'"\]|\\\\s|@)(\{0,1\}\.?|[?*]))+~' => '',
+		'~^(\\\\[wsd])[+][?+]?~' => '\1',
+		'~^[.][?*+]*~' => '',
 	);
 	$sigs = preg_replace(array_keys($fix), array_values($fix), $sigs);
 
 	optSigCheck($sigs);
 
-	$tmp = array();
-	foreach ($sigs as $i => $s) {
-		if (strpos($s, '.+') !== false || strpos($s, '.*') !== false) {
-			unset($sigs[$i]);
-			$tmp[] = $s;
+	rsort($sigs);
+
+	$result = array();
+	$tree = array();
+	$size = 0;
+	foreach ($sigs as $sig) {
+		if (!optAddPattern($tree, strtolower($sig))) {
+			$result[] = $sig;
+			continue;
+		}
+
+		$size += strlen($sig);
+
+		if ($size > 7000) {
+			$size = 0;
+			$result = array_merge($result, optMergePrefixes($tree));
+			$tree = array();
 		}
 	}
-	
-	usort($sigs, 'strcasecmp');
-	$txt = implode("\n", $sigs);
 
-	for ($i = 24; $i >= 1; ($i > 4 ) ? $i -= 4 : --$i) {
-		$txt = preg_replace_callback('#^((?>(?:\\\\.|\\[.+?\\]|[^(\n]|\((?:\\\\.|[^)(\n])++\))(?:[*?+]\+?|)){' . $i . ',}).*(?:\\n\\1(?![{?*+]).+)+#im', 'optMergePrefixes', $txt);
+	$result = array_merge($result, optMergePrefixes($tree));
+
+	if (DEBUG_MODE) {
+		$tmp = array();
+		foreach ($result as $pattern) {
+			$tmp = array_merge($tmp, optSplitPattern($pattern));
+		}
+
+		$diff = array_udiff($sigs, $tmp, 'strcasecmp');
+		if (count($diff)) {
+			echo "Missing some regex:\n";
+			print_r($diff);
+		}
 	}
 
-	$sigs = array_merge(explode("\n", $txt), $tmp);
+	$sigs = $result;
 	
 	optSigCheck($sigs);
 }
 
-function optMergePrefixes($m)
+function optMergePrefixes($list, $first = true)
 {
-	$prefix = $m[1];
-	$prefix_len = strlen($prefix);
+	$r = array();
 
-	$suffixes = array();
-	foreach (explode("\n", $m[0]) as $line) {
-		$suffixes[] = substr($line, $prefix_len);
+	foreach ($list as $prefix => $suffix) {
+		if (is_array($suffix)) {
+			$r[] = $prefix . optMergePrefixes($suffix, false);
+		} else {
+			$r[] = $prefix;
+		}
+	}
+
+	if ($first) return $r;
+
+	switch (count($r)) {
+		case 0:
+			return '';
+
+		case 1:
+			return $r[0];
+
+		default:
+			rsort($r);
+			return '(?:'.implode('|', $r).')';
+	}
+}
+
+function optAddPattern(&$tree, $pattern)
+{
+	preg_match_all(
+		'~\\G((?:[^?*+.()\\[\\\\]|\\\\x[0-9a-f]{2}|\\\\(?:[0-9]{3}|[^0-9])|\\[(?:[^\\]\\\\]+|\\\\.)++\\]|\\((?>\\?:|)(?1)*\\)|\\(\\?<X[0-9a-f]{8}>\\)|\\.(?![*+]))(?:[*?+][?+]?|\\{\\d+(?:,\\d*)?\\}[?+]?)?)~xi'
+		, $pattern
+		, $matches
+	);
+
+	if ($pattern !== implode($matches[0])) {
+		return false;
+	}
+
+	$tmp =& $tree;
+	foreach ($matches[0] as $block) {
+		$tmp =& $tmp[$block];
+	}
+	unset($tmp);
+
+	return true;
+}
+
+function optSplitPattern($pattern)
+{
+	$result = array();
+
+	preg_match_all(
+		'~(?:\\\\.|[^()\\[|\\\\]+|\\[(?:\\\\.|[^\\]\\\\]+)++)++|\||(\\((?:(?:\\\\.|[^()\\[\\\\]+|\\[(?:\\\\.|[^\\]\\\\]+)++)++|(?1))*+\\))~'
+		, $pattern
+		, $matches
+	);
+
+	if (in_array('|', $matches[0])) {
+		$tmp = '';
+		foreach ($matches[0] as $j) {
+			if ($j === '|') {
+				$result = array_merge($result, optSplitPattern($tmp));
+				$tmp = '';
+			} else {
+				$tmp .= $j;
+			}
+		}
+		$result = array_merge($result, optSplitPattern($tmp));
+		return $result;
 	}
 	
-	return $prefix . '(?:' . implode('|', $suffixes) . ')';
+	$last = array_pop($matches[0]);
+
+	if ($last === null OR '(?:' !== substr($last, 0, 3)) {
+		return array($pattern);
+	}
+	
+	$prefix = implode($matches[0]);
+	$suffix = optSplitPattern(substr($last, 3, -1));
+
+    foreach ($suffix as $suff) {
+		$result[] = $prefix.$suff;
+    }
+
+    return $result;
 }
 
 /*
